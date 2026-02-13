@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Seus Servidores</h1>
+  <div id="servers"></div>
+
+  <script>
+    fetch("/api/guilds")
+      .then(res => res.json())
+      .then(guilds => {
+        const container = document.getElementById("servers");
+        guilds.forEach(g => {
+          const div = document.createElement("div");
+          div.className = "server";
+          div.innerText = g.name;
+          container.appendChild(div);
+        });
+      });
+  </script>
+</body>
+</html>
