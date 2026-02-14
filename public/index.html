@@ -1,12 +1,75 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-br">
 <head>
-  <title>TDZ Dashboard</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TDZ Dashboard</title>
+    <style>
+        /* Reset básico */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+            color: #e74c3c;
+        }
+
+        a.btn {
+            display: inline-block;
+            padding: 15px 35px;
+            background: #7289da;
+            color: #fff;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1rem;
+            border-radius: 8px;
+            transition: 0.3s;
+        }
+
+        a.btn:hover {
+            background: #5b6eae;
+            box-shadow: 0 0 15px rgba(114, 137, 218, 0.5);
+        }
+
+        ul.guilds {
+            margin-top: 30px;
+            list-style: none;
+            text-align: left;
+        }
+
+        ul.guilds li {
+            background: rgba(255,255,255,0.1);
+            margin: 5px 0;
+            padding: 10px 15px;
+            border-radius: 5px;
+        }
+    </style>
 </head>
-<body style="background:#111;color:white;text-align:center;padding-top:100px;font-family:sans-serif;">
-  <h1>TDZ Dashboard</h1>
-  <a href="/login" style="background:#5865F2;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">
-    Entrar com Discord
-  </a>
+<body>
+    <h1>TDZ Dashboard</h1>
+    <a href="/login" class="btn">Entrar com Discord</a>
+
+    <!-- Exemplo de lista de servidores -->
+    <!-- Quando o usuário logar, o dashboard poderá substituir essa lista -->
+    <ul class="guilds">
+        <!-- <li>Servidor 1</li> -->
+        <!-- <li>Servidor 2</li> -->
+    </ul>
 </body>
 </html>
