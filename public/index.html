@@ -4,72 +4,56 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TDZ Dashboard</title>
-    <style>
-        /* Reset básico */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-            color: #fff;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            text-align: center;
-        }
-
-        h1 {
-            font-size: 2.5rem;
-            margin-bottom: 30px;
-            color: #e74c3c;
-        }
-
-        a.btn {
-            display: inline-block;
-            padding: 15px 35px;
-            background: #7289da;
-            color: #fff;
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 1rem;
-            border-radius: 8px;
-            transition: 0.3s;
-        }
-
-        a.btn:hover {
-            background: #5b6eae;
-            box-shadow: 0 0 15px rgba(114, 137, 218, 0.5);
-        }
-
-        ul.guilds {
-            margin-top: 30px;
-            list-style: none;
-            text-align: left;
-        }
-
-        ul.guilds li {
-            background: rgba(255,255,255,0.1);
-            margin: 5px 0;
-            padding: 10px 15px;
-            border-radius: 5px;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>TDZ Dashboard</h1>
-    <a href="/login" class="btn">Entrar com Discord</a>
+    <header>
+        <h1>TDZ Dashboard</h1>
+        <a href="/login" class="btn-login">Entrar com Discord</a>
+    </header>
 
-    <!-- Exemplo de lista de servidores -->
-    <!-- Quando o usuário logar, o dashboard poderá substituir essa lista -->
-    <ul class="guilds">
-        <!-- <li>Servidor 1</li> -->
-        <!-- <li>Servidor 2</li> -->
-    </ul>
+    <main>
+        <section class="servers">
+            <h2>Servidores do Bot</h2>
+            <div class="server-cards">
+                <!-- Cards de servidores do bot aparecerão aqui -->
+                <div class="card">
+                    <h3>Servidor 1</h3>
+                    <button>Pausar Bot</button>
+                    <button>Ativar Bot</button>
+                </div>
+                <div class="card">
+                    <h3>Servidor 2</h3>
+                    <button>Pausar Bot</button>
+                    <button>Ativar Bot</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="commands">
+            <h2>Comandos Recentes</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Comando</th>
+                        <th>Usuário</th>
+                        <th>Data/Hora</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>/teste</td>
+                        <td>Rafa</td>
+                        <td>12/02/2026 22:42</td>
+                    </tr>
+                    <tr>
+                        <td>/divulgar</td>
+                        <td>Lucas</td>
+                        <td>12/02/2026 21:30</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </main>
 </body>
 </html>
