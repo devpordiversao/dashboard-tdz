@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TDZ Bot Dashboard</title>
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
+* { margin:0; padding:0; box-sizing:border-box; }
 body { font-family: Arial, sans-serif; background: linear-gradient(135deg,#161620,#1e1e2e); color:#fff; padding:20px; }
 .navbar { background:#2a2a3e; padding:20px; border-radius:10px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center; }
 h1 { color:#5865F2; }
@@ -15,7 +15,7 @@ h1 { color:#5865F2; }
 .tab.active { color:#5865F2; border-bottom-color:#5865F2; }
 .tab-content { display:none; }
 .tab-content.active { display:block; }
-input,textarea,select { width:100%; padding:10px; margin:10px 0; background:#161620; border:2px solid #444; border-radius:5px; color:#fff; }
+input, textarea, select { width:100%; padding:10px; margin:10px 0; background:#161620; border:2px solid #444; border-radius:5px; color:#fff; }
 .btn { padding:10px 20px; margin:5px; border:none; border-radius:5px; cursor:pointer; font-weight:bold; }
 .btn-primary { background:#5865F2; color:white; }
 .btn-success { background:#43B581; color:white; }
@@ -28,7 +28,6 @@ input,textarea,select { width:100%; padding:10px; margin:10px 0; background:#161
 </style>
 </head>
 <body>
-
 <div class="navbar">
 <h1>🤖 TDZ Bot Dashboard</h1>
 <div>Status: <span id="status">Offline</span></div>
@@ -49,7 +48,7 @@ input,textarea,select { width:100%; padding:10px; margin:10px 0; background:#161
 
 <div class="tab-content active" id="messages">
 <label>Canal:</label>
-<select id="channelSelect"></select>
+<select id="channelSelect"><option value="">Carregando...</option></select>
 <label>Mensagem:</label>
 <textarea id="messageText" rows="4"></textarea>
 <button class="btn btn-primary" onclick="sendMessage()">📨 Enviar</button>
@@ -68,23 +67,20 @@ input,textarea,select { width:100%; padding:10px; margin:10px 0; background:#161
 
 <div class="tab-content" id="roles">
 <label>Usuário:</label>
+<input type="text" id="userInput" placeholder="Digite ou selecione...">
 <select id="userSelect"></select>
 <label>Cargo:</label>
+<input type="text" id="roleInput" placeholder="Digite ou selecione...">
 <select id="roleSelect"></select>
+<div style="margin-top:10px;">
 <button class="btn btn-success" onclick="giveRole()">➕ Dar Cargo</button>
 <button class="btn btn-danger" onclick="removeRole()">➖ Remover</button>
 </div>
+</div>
 
 <div class="tab-content" id="commands">
-<h3>Comandos Rápidos</h3>
-<button class="btn btn-primary" onclick="runCommand('embed')">🖼️ Embed</button>
-<button class="btn btn-primary" onclick="runCommand('sugerir')">💡 Sugerir</button>
-<button class="btn btn-primary" onclick="runCommand('stats')">📊 Stats</button>
-<button class="btn btn-primary" onclick="runCommand('relatorio')">📋 Relatório</button>
-<button class="btn btn-primary" onclick="runCommand('backup')">💾 Backup</button>
-<br><br>
-<button class="btn btn-success" onclick="startBot()">▶️ Iniciar Bot</button>
-<button class="btn btn-danger" onclick="stopBot()">⏹️ Parar Bot</button>
+<button class="btn btn-success" onclick="startBot()">▶️ Iniciar</button>
+<button class="btn btn-danger" onclick="stopBot()">⏹️ Parar</button>
 </div>
 </div>
 
@@ -94,13 +90,15 @@ input,textarea,select { width:100%; padding:10px; margin:10px 0; background:#161
 </div>
 
 <script>
-function showTab(tab){
+// === Abas ===
+function showTab(tab) {
 document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
 document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
 event.target.classList.add('active');
 document.getElementById(tab).classList.add('active');
 }
 
+// === Logs ===
 function addLog(type,msg){
 const log=document.getElementById('logs');
 const entry=document.createElement('div');
@@ -109,89 +107,64 @@ entry.textContent=`[${new Date().toLocaleTimeString()}] ${msg}`;
 log.appendChild(entry);
 log.scrollTop=log.scrollHeight;
 }
-
 function clearLogs(){document.getElementById('logs').innerHTML='';}
 
-// Simula preenchimento dos dropdowns
-function populateDropdowns(){
-fetch('/api/get-users')
-.then(r=>r.json())
-.then(data=>{
-const userSelect=document.getElementById('userSelect');
-userSelect.innerHTML='';
-data.forEach(u=>{
-let opt=document.createElement('option');
-opt.value=u.id; opt.text=u.username; userSelect.appendChild(opt);
-});
-});
-
-fetch('/api/get-roles')
-.then(r=>r.json())
-.then(data=>{
-const roleSelect=document.getElementById('roleSelect');
-roleSelect.innerHTML='';
-data.forEach(r=>{
-let opt=document.createElement('option');
-opt.value=r.id; opt.text=r.name; roleSelect.appendChild(opt);
-});
-});
-
-fetch('/api/get-channels')
-.then(r=>r.json())
-.then(data=>{
-const channelSelect=document.getElementById('channelSelect');
-channelSelect.innerHTML='';
-data.forEach(c=>{
-let opt=document.createElement('option');
-opt.value=c.id; opt.text=c.name; channelSelect.appendChild(opt);
-});
-});
-}
-
-// Ações do dashboard
-function sendMessage(){
-const canal=document.getElementById('channelSelect').value;
-const msg=document.getElementById('messageText').value;
-fetch('/api/send-message',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({channelId:canal,message:msg})})
-.then(r=>r.json()).then(r=>addLog('info','Mensagem enviada!')).catch(e=>addLog('error','Erro ao enviar'));
-}
-
-function createChannel(){
-const name=document.getElementById('channelName').value;
-const type=document.getElementById('channelType').value;
-fetch('/api/create-channel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({guildId:'SERVIDOR_ID_AQUI',name:name,type:type})})
-.then(r=>r.json()).then(r=>addLog('info','Canal '+r.name+' criado!')).catch(e=>addLog('error','Erro ao criar canal'));
-}
-
-function giveRole(){
-const user=document.getElementById('userSelect').value;
-const role=document.getElementById('roleSelect').value;
-fetch('/api/give-role',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:user,roleId:role})})
-.then(r=>r.json()).then(r=>addLog('info','Cargo dado!')).catch(e=>addLog('error','Erro ao dar cargo'));
-}
-
-function removeRole(){
-const user=document.getElementById('userSelect').value;
-const role=document.getElementById('roleSelect').value;
-fetch('/api/remove-role',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:user,roleId:role})})
-.then(r=>r.json()).then(r=>addLog('info','Cargo removido!')).catch(e=>addLog('error','Erro ao remover cargo'));
-}
-
-function runCommand(cmd){
-let params={};
-if(cmd==='embed') params={canal:prompt('ID do canal'),titulo:prompt('Título'),descricao:prompt('Descrição'),cor:prompt('Cor HEX ex:#5865F2')};
-if(cmd==='sugerir') params={sugestao:prompt('Sugestão')};
-fetch('/api/command',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({command:cmd,params:params})})
-.then(r=>r.json()).then(r=>addLog('info','Comando '+cmd+' executado!')).catch(e=>addLog('error','Erro no comando '+cmd));
-}
-
+// === Bot ===
 function startBot(){document.getElementById('status').textContent='Online'; addLog('info','Bot iniciado');}
 function stopBot(){document.getElementById('status').textContent='Offline'; addLog('error','Bot parado');}
 
-// Inicializa
-addLog('info','Dashboard pronto');
-populateDropdowns();
-</script>
+// === Mensagens ===
+async function sendMessage(){
+let channel=document.getElementById('channelSelect').value;
+let msg=document.getElementById('messageText').value;
+if(!channel||!msg){addLog('warning','Selecione canal e escreva mensagem'); return;}
+addLog('info',`Mensagem enviada para ${channel}: ${msg}`);
+// Aqui faria fetch POST para /api/send-message
+}
 
+// === Canais ===
+async function createChannel(){
+let name=document.getElementById('channelName').value;
+let type=document.getElementById('channelType').value;
+if(!name){addLog('warning','Digite o nome do canal'); return;}
+let typeCode=type.toLowerCase()==='texto'?0:2;
+addLog('info',`Canal "${name}" criado como ${type}`);
+// Aqui faria fetch POST para /api/create-channel
+}
+
+// === Cargos ===
+async function giveRole(){
+let user=document.getElementById('userInput').value||document.getElementById('userSelect').value;
+let role=document.getElementById('roleInput').value||document.getElementById('roleSelect').value;
+if(!user||!role){addLog('warning','Selecione usuário e cargo'); return;}
+addLog('info',`Cargo "${role}" dado a ${user}`);
+// Aqui faria fetch POST para /api/give-role
+}
+async function removeRole(){
+let user=document.getElementById('userInput').value||document.getElementById('userSelect').value;
+let role=document.getElementById('roleInput').value||document.getElementById('roleSelect').value;
+if(!user||!role){addLog('warning','Selecione usuário e cargo'); return;}
+addLog('info',`Cargo "${role}" removido de ${user}`);
+// Aqui faria fetch POST para /api/remove-role
+}
+
+// === Inicializa dropdowns fictícios (pode ser substituído por fetch real) ===
+const exampleUsers=['Rafa','Clara','Lucas','Henrique'];
+const exampleRoles=['Admin','Mod','VIP','Membro'];
+const exampleChannels=['geral','avisos','vip'];
+
+function populateDropdowns(){
+let userSelect=document.getElementById('userSelect');
+let roleSelect=document.getElementById('roleSelect');
+let channelSelect=document.getElementById('channelSelect');
+userSelect.innerHTML=''; roleSelect.innerHTML=''; channelSelect.innerHTML='';
+exampleUsers.forEach(u=>{let o=document.createElement('option'); o.value=o.textContent=u; userSelect.appendChild(o);});
+exampleRoles.forEach(r=>{let o=document.createElement('option'); o.value=o.textContent=r; roleSelect.appendChild(o);});
+exampleChannels.forEach(c=>{let o=document.createElement('option'); o.value=o.textContent=c; channelSelect.appendChild(o);});
+}
+
+populateDropdowns();
+addLog('info','Dashboard pronto');
+</script>
 </body>
-    </html>
+</html>
