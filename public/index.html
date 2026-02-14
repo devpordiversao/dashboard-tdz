@@ -49,11 +49,21 @@
 
         <!-- Mensagens -->
         <div class="tab-content active" id="messages">
+            <!-- Campo existente -->
             <label>Canal:</label>
             <select id="channelSelect"></select>
             <label>Mensagem:</label>
             <textarea id="messageText" rows="4" placeholder="Digite sua mensagem"></textarea>
             <button class="btn btn-primary" onclick="sendMessage()">📨 Enviar</button>
+
+            <hr style="margin:20px 0; border-color:#444;">
+
+            <!-- Novo campo para DM -->
+            <label>Enviar DM para usuário:</label>
+            <select id="dmUserSelect"></select>
+            <label>Mensagem DM:</label>
+            <textarea id="dmMessageText" rows="4" placeholder="Digite a mensagem DM"></textarea>
+            <button class="btn btn-primary" onclick="sendDM()">✉️ Enviar DM</button>
         </div>
 
         <!-- Canais -->
@@ -123,6 +133,7 @@
             loadChannels();
             loadUsers();
             loadRoles();
+            loadDMUsers();
         }
 
         async function loadChannels(){
@@ -167,10 +178,26 @@
             });
         }
 
+        // Novo: dropdown para DM
+        async function loadDMUsers(){
+            const guildId = document.getElementById('serverSelect').value;
+            const res = await fetch(`/api/servers/${guildId}/members`);
+            const users = await res.json();
+            const sel = document.getElementById('dmUserSelect');
+            sel.innerHTML='';
+            users.forEach(u=>{
+                const opt = document.createElement('option');
+                opt.value = u.id;
+                opt.textContent = u.tag;
+                sel.appendChild(opt);
+            });
+        }
+
         document.getElementById('serverSelect').addEventListener('change', ()=>{
             loadChannels();
             loadUsers();
             loadRoles();
+            loadDMUsers();
         });
 
         async function sendMessage(){
@@ -187,6 +214,22 @@
                 if(res.ok) addLog('info',`Mensagem enviada no canal ${channelId}`);
                 else addLog('error',`Falha ao enviar mensagem: ${await res.text()}`);
             } catch(err){ addLog('error',`Erro ao enviar mensagem: ${err.message}`); }
+        }
+
+        async function sendDM(){
+            const guildId = document.getElementById('serverSelect').value;
+            const userId = document.getElementById('dmUserSelect').value;
+            const message = document.getElementById('dmMessageText').value;
+            if(!message) return addLog('warning','Mensagem DM vazia');
+            try{
+                const res = await fetch('/api/send-dm',{
+                    method:'POST',
+                    headers:{'Content-Type':'application/json'},
+                    body:JSON.stringify({guildId,userId,message})
+                });
+                if(res.ok) addLog('info',`Mensagem DM enviada para ${userId}`);
+                else addLog('error',`Falha ao enviar DM: ${await res.text()}`);
+            } catch(err){ addLog('error',`Erro ao enviar DM: ${err.message}`); }
         }
 
         async function createChannel(){
@@ -246,4 +289,4 @@
         addLog('info','Dashboard pronto');
     </script>
 </body>
-</html>
+                </html>
