@@ -73,7 +73,6 @@ app.post('/api/create-channel', async (req,res) => {
     const guild = bot.guilds.cache.get(guildId);
     if(!guild) return res.status(400).send('Servidor não encontrado');
 
-    // **Correção**: tipo como número
     const channelType = type.toLowerCase() === 'texto' ? 0 : 2; // 0=texto, 2=voz
 
     try {
@@ -113,7 +112,7 @@ app.post('/api/remove-role', async (req,res) => {
     } catch(err) { console.error(err); res.status(500).send(err.message); }
 });
 
-// Enviar mensagem
+// Enviar mensagem em canal
 app.post('/api/send-message', async (req,res) => {
     const { guildId, channelId, message } = req.body;
     const guild = bot.guilds.cache.get(guildId);
@@ -126,6 +125,22 @@ app.post('/api/send-message', async (req,res) => {
         await channel.send(message);
         res.json({ channelId, message });
     } catch(err) { console.error(err); res.status(500).send(err.message); }
+});
+
+// --- Enviar DM ---
+app.post('/api/send-dm', async (req, res) => {
+    const { guildId, userId, message } = req.body;
+    const guild = bot.guilds.cache.get(guildId);
+    if (!guild) return res.status(400).send('Servidor não encontrado');
+
+    try {
+        const member = await guild.members.fetch(userId);
+        await member.send(message);
+        res.json({ userId, message });
+    } catch (err) {
+        console.error('Erro ao enviar DM:', err);
+        res.status(500).send(err.message);
+    }
 });
 
 // Start server
