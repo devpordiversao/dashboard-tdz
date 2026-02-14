@@ -15,16 +15,18 @@ app.get('/', (req, res) => {
 });
 
 // --- Bot Discord ---
-const bot = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessages] });
+const bot = new Client({ intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildMessages
+] });
 
 bot.once('ready', async () => {
     console.log(`Bot online: ${bot.user.tag}`);
-
-    // Sincronizar comandos
     try {
         await bot.application.commands.set([
             new SlashCommandBuilder().setName('ping').setDescription('Teste do bot')
-            // Adicione outros comandos aqui
+            // Outros comandos aqui
         ]);
         console.log('✅ Comandos sincronizados!');
     } catch (e) {
@@ -79,10 +81,13 @@ app.post('/api/create-channel', async (req, res) => {
     const { guildId, name, type } = req.body;
     const guild = bot.guilds.cache.get(guildId);
     if (!guild) return res.status(400).send('Servidor não encontrado');
+
+    let channelType = type.toLowerCase() === 'texto' ? 'GUILD_TEXT' : 'GUILD_VOICE';
+
     try {
-        const created = await guild.channels.create({ name, type: type==='Texto'?'GUILD_TEXT':'GUILD_VOICE' });
-        res.json({id: created.id, name: created.name});
-    } catch (err) {
+        const channel = await guild.channels.create({ name, type: channelType });
+        res.json({id: channel.id, name: channel.name});
+    } catch(err) {
         console.error('Erro ao criar canal:', err);
         res.status(500).send(err.message);
     }
@@ -102,7 +107,7 @@ app.post('/api/set-role', async (req, res) => {
 
         await member.roles.add(role);
         res.json({userId, roleId});
-    } catch (err) {
+    } catch(err) {
         console.error('Erro ao dar cargo:', err);
         res.status(500).send(err.message);
     }
@@ -122,7 +127,7 @@ app.post('/api/remove-role', async (req, res) => {
 
         await member.roles.remove(role);
         res.json({userId, roleId});
-    } catch (err) {
+    } catch(err) {
         console.error('Erro ao remover cargo:', err);
         res.status(500).send(err.message);
     }
@@ -140,7 +145,7 @@ app.post('/api/send-message', async (req, res) => {
     try {
         await channel.send(message);
         res.json({channelId, message});
-    } catch (err) {
+    } catch(err) {
         console.error('Erro ao enviar mensagem:', err);
         res.status(500).send(err.message);
     }
