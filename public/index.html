@@ -1,40 +1,38 @@
+<!-- public/index.html -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TDZ Bot Dashboard</title>
-<style>
-body{font-family:sans-serif;background:#1e1e2e;color:#fff;padding:1rem}
-select,input,textarea,button{display:block;margin:0.5rem 0;padding:0.5rem;border-radius:5px;border:none;font-size:1rem;width:100%}
-button{cursor:pointer}
-</style>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-<h1>TDZ Dashboard</h1>
+<h1>🤖 TDZ Bot Dashboard</h1>
 
-<label>Servidor</label>
-<select id="serverSelect"></select>
+<div class="dashboard-section">
+    <h2>Servidor / Canal / Mensagem</h2>
+    <select id="serverSelect"></select>
+    <select id="channelSelect"></select>
+    <textarea id="messageInput" placeholder="Digite sua mensagem"></textarea>
+    <button onclick="sendMessage()">Enviar Mensagem</button>
+</div>
 
-<label>Canal</label>
-<select id="channelSelect"></select>
+<div class="dashboard-section">
+    <h2>Usuário / Cargo</h2>
+    <select id="userSelect"></select>
+    <input id="roleInput" placeholder="ID do cargo">
+    <button onclick="setRole()">Dar Cargo</button>
+</div>
 
-<label>Mensagem</label>
-<textarea id="messageInput" placeholder="Digite sua mensagem"></textarea>
-<button onclick="sendMessage()">Enviar Mensagem</button>
-
-<hr>
-
-<label>Usuário</label>
-<select id="userSelect"></select>
-
-<label>Cargo (ID)</label>
-<input id="roleInput" placeholder="Coloque o ID do cargo">
-<button onclick="setRole()">Dar Cargo</button>
+<div class="dashboard-section">
+    <h2>Logs</h2>
+    <div id="logBox" style="background:#000;padding:1rem;height:300px;overflow-y:auto;color:#0f0;font-family:monospace;"></div>
+</div>
 
 <script>
-// Carrega servidores, canais e membros
-async function loadServers(){
+// Carregar servidores, canais, membros
+async function loadServers() {
     const res = await fetch('/api/servers');
     const servers = await res.json();
     const serverSelect = document.getElementById('serverSelect');
@@ -42,7 +40,7 @@ async function loadServers(){
     servers.forEach(s=>{const opt=document.createElement('option');opt.value=s.id;opt.textContent=s.name;serverSelect.appendChild(opt)});
     loadChannels();
 }
-async function loadChannels(){
+async function loadChannels() {
     const serverId=document.getElementById('serverSelect').value;
     const res=await fetch(`/api/servers/${serverId}/channels`);
     const channels=await res.json();
@@ -51,7 +49,7 @@ async function loadChannels(){
     channels.forEach(c=>{const opt=document.createElement('option');opt.value=c.id;opt.textContent=c.name;channelSelect.appendChild(opt)});
     loadMembers();
 }
-async function loadMembers(){
+async function loadMembers() {
     const serverId=document.getElementById('serverSelect').value;
     const res=await fetch(`/api/servers/${serverId}/members`);
     const members=await res.json();
@@ -59,24 +57,34 @@ async function loadMembers(){
     userSelect.innerHTML='';
     members.forEach(u=>{const opt=document.createElement('option');opt.value=u.id;opt.textContent=u.tag;userSelect.appendChild(opt)});
 }
+
 document.getElementById('serverSelect').addEventListener('change',()=>{loadChannels()});
 loadServers();
 
 // Funções de ação
-async function sendMessage(){
+async function sendMessage() {
     const guildId=document.getElementById('serverSelect').value;
     const channelId=document.getElementById('channelSelect').value;
     const message=document.getElementById('messageInput').value;
     await fetch('/api/send-message',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({guildId,channelId,message})});
-    alert('Mensagem enviada!');
+    updateLogs();
 }
-async function setRole(){
+async function setRole() {
     const guildId=document.getElementById('serverSelect').value;
     const userId=document.getElementById('userSelect').value;
     const roleId=document.getElementById('roleInput').value;
     await fetch('/api/set-role',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({guildId,userId,roleId})});
-    alert('Cargo adicionado!');
+    updateLogs();
 }
+
+// Atualizar logs
+async function updateLogs() {
+    const res = await fetch('/api/logs');
+    const logs = await res.json();
+    const logBox = document.getElementById('logBox');
+    logBox.innerHTML = logs.map(l => `<div>${l}</div>`).join('');
+}
+setInterval(updateLogs, 2000);
 </script>
 </body>
 </html>
