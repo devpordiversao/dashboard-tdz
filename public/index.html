@@ -1,249 +1,236 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TDZ Bot Dashboard</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: Arial, sans-serif; background: linear-gradient(135deg,#161620,#1e1e2e); color: #fff; padding:20px; }
-        .navbar { background: #2a2a3e; padding: 20px; border-radius: 10px; margin-bottom:20px; display:flex; justify-content: space-between; align-items:center; }
-        h1 { color: #5865F2; }
-        .card { background: #2a2a3e; padding: 20px; border-radius: 10px; margin-bottom:20px; }
-        .tabs { display: flex; gap:10px; margin-bottom:20px; border-bottom: 2px solid #444; }
-        .tab { padding:10px 20px; cursor:pointer; border-bottom:3px solid transparent; }
-        .tab.active { color:#5865F2; border-bottom-color:#5865F2; }
-        .tab-content { display:none; }
-        .tab-content.active { display:block; }
-        input, textarea, select { width:100%; padding:10px; margin:10px 0; background:#161620; border:2px solid #444; border-radius:5px; color:#fff; }
-        .btn { padding:10px 20px; margin:5px; border:none; border-radius:5px; cursor:pointer; font-weight:bold; }
-        .btn-primary { background:#5865F2; color:white; }
-        .btn-success { background:#43B581; color:white; }
-        .btn-danger { background:#F04747; color:white; }
-        .logs { background:#000; padding:15px; border-radius:5px; max-height:300px; overflow-y:auto; font-family: monospace; }
-        .log-entry { padding:5px 0; }
-        .info { color:#43B581; }
-        .error { color:#F04747; }
-        .warning { color:#FAA61A; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TDZ Bot Dashboard</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #161620, #1e1e2e); color: #fff; padding: 20px; }
+.navbar { background: #2a2a3e; padding: 20px; border-radius: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+h1 { color: #5865F2; }
+.card { background: #2a2a3e; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+.tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #444; }
+.tab { padding: 10px 20px; cursor: pointer; border-bottom: 3px solid transparent; }
+.tab.active { color: #5865F2; border-bottom-color: #5865F2; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+input, textarea, select { width: 100%; padding: 10px; margin: 10px 0; background: #161620; border: 2px solid #444; border-radius: 5px; color: #fff; }
+.btn { padding: 10px 20px; margin: 5px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+.btn-primary { background: #5865F2; color: white; }
+.btn-success { background: #43B581; color: white; }
+.btn-danger { background: #F04747; color: white; }
+.logs { background: #000; padding: 15px; border-radius: 5px; max-height: 300px; overflow-y: auto; font-family: monospace; }
+.log-entry { padding: 5px 0; }
+.info { color: #43B581; }
+.error { color: #F04747; }
+.warning { color: #FAA61A; }
+</style>
 </head>
 <body>
-    <div class="navbar">
-        <h1>🤖 TDZ Bot Dashboard</h1>
-        <div>Status: <span id="status">Offline</span></div>
-    </div>
+<div class="navbar">
+<h1>🤖 TDZ Bot Dashboard</h1>
+<div>Status: <span id="status">Offline</span></div>
+</div>
 
-    <div class="card">
-        <h2>Servidores: <span id="serverCount">0</span></h2>
-        <select id="serverSelect"></select>
-        <div id="serversList"></div>
-    </div>
+<div class="card">
+<h2>Servidores: <span id="serverCount">0</span></h2>
+<div id="serversList"></div>
+</div>
 
-    <div class="card">
-        <div class="tabs">
-            <div class="tab active" onclick="showTab('messages')">📨 Mensagens</div>
-            <div class="tab" onclick="showTab('channels')">📁 Canais</div>
-            <div class="tab" onclick="showTab('roles')">🎭 Cargos</div>
-            <div class="tab" onclick="showTab('commands')">⚡ Comandos</div>
-        </div>
+<div class="card">
+<div class="tabs">
+<div class="tab active" onclick="showTab('messages')">📨 Mensagens</div>
+<div class="tab" onclick="showTab('channels')">📁 Canais</div>
+<div class="tab" onclick="showTab('roles')">🎭 Cargos</div>
+<div class="tab" onclick="showTab('commands')">⚡ Comandos</div>
+</div>
 
-        <!-- Mensagens -->
-        <div class="tab-content active" id="messages">
-            <label>Canal:</label>
-            <select id="channelSelect"></select>
-            <label>Mensagem:</label>
-            <textarea id="messageText" rows="4" placeholder="Digite sua mensagem"></textarea>
-            <button class="btn btn-primary" onclick="sendMessage()">📨 Enviar</button>
-        </div>
+<div class="tab-content active" id="messages">
+<label>Canal:</label>
+<select id="channelSelect"></select>
+<label>Mensagem:</label>
+<textarea id="messageText" rows="4"></textarea>
+<button class="btn btn-primary" onclick="sendMessage()">📨 Enviar</button>
+</div>
 
-        <!-- Canais -->
-        <div class="tab-content" id="channels">
-            <label>Nome do Canal:</label>
-            <input type="text" id="channelName" placeholder="Nome do canal">
-            <label>Tipo:</label>
-            <select id="channelType">
-                <option>Texto</option>
-                <option>Voz</option>
-            </select>
-            <button class="btn btn-primary" onclick="createChannel()">➕ Criar Canal</button>
-        </div>
+<div class="tab-content" id="channels">
+<label>Nome do Canal:</label>
+<input type="text" id="channelName">
+<label>Tipo:</label>
+<select id="channelType">
+<option>Texto</option>
+<option>Voz</option>
+</select>
+<button class="btn btn-primary" onclick="createChannel()">➕ Criar Canal</button>
+</div>
 
-        <!-- Cargos -->
-        <div class="tab-content" id="roles">
-            <label>Usuário:</label>
-            <select id="userSelect"></select>
-            <label>Cargo:</label>
-            <select id="roleSelect"></select>
-            <button class="btn btn-success" onclick="giveRole()">➕ Dar Cargo</button>
-            <button class="btn btn-danger" onclick="removeRole()">➖ Remover</button>
-        </div>
+<div class="tab-content" id="roles">
+<label>Usuário:</label>
+<select id="userSelect"></select>
+<label>Cargo:</label>
+<select id="roleSelect"></select>
+<button class="btn btn-success" onclick="giveRole()">➕ Dar Cargo</button>
+<button class="btn btn-danger" onclick="removeRole()">➖ Remover</button>
+</div>
 
-        <!-- Comandos -->
-        <div class="tab-content" id="commands">
-            <button class="btn btn-success" onclick="startBot()">▶️ Iniciar</button>
-            <button class="btn btn-danger" onclick="stopBot()">⏹️ Parar</button>
-        </div>
-    </div>
+<div class="tab-content" id="commands">
+<button class="btn btn-success" onclick="startBot()">▶️ Iniciar</button>
+<button class="btn btn-danger" onclick="stopBot()">⏹️ Parar</button>
+</div>
+</div>
 
-    <div class="card">
-        <h2>📋 Logs <button class="btn btn-danger" onclick="clearLogs()">Limpar</button></h2>
-        <div class="logs" id="logs"></div>
-    </div>
+<div class="card">
+<h2>📋 Logs <button class="btn btn-danger" onclick="clearLogs()">Limpar</button></h2>
+<div class="logs" id="logs"></div>
+</div>
 
-    <script>
-        function showTab(tab){
-            document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
-            event.target.classList.add('active');
-            document.getElementById(tab).classList.add('active');
-        }
+<script>
+function showTab(tab) {
+document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+event.target.classList.add('active');
+document.getElementById(tab).classList.add('active');
+}
 
-        function addLog(type,msg){
-            const log = document.getElementById('logs');
-            const entry = document.createElement('div');
-            entry.className = 'log-entry '+type;
-            entry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
-            log.appendChild(entry);
-            log.scrollTop = log.scrollHeight;
-        }
+function addLog(type, msg) {
+const log = document.getElementById('logs');
+const entry = document.createElement('div');
+entry.className = 'log-entry ' + type;
+entry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+log.appendChild(entry);
+log.scrollTop = log.scrollHeight;
+}
 
-        function clearLogs(){ document.getElementById('logs').innerHTML=''; }
+function clearLogs() {
+document.getElementById('logs').innerHTML = '';
+}
 
-        async function loadServers(){
-            const res = await fetch('/api/servers');
-            const servers = await res.json();
-            const sel = document.getElementById('serverSelect');
-            sel.innerHTML = '';
-            servers.forEach(s=>{
-                const opt = document.createElement('option');
-                opt.value = s.id;
-                opt.textContent = s.name;
-                sel.appendChild(opt);
-            });
-            loadChannels();
-            loadUsers();
-            loadRoles();
-        }
+// -------------------- FUNÇÕES DE DROPDOWN --------------------
+async function populateDropdowns() {
+try {
+    const resUsers = await fetch('/api/users');
+    const users = await resUsers.json();
+    const userSelect = document.getElementById('userSelect');
+    userSelect.innerHTML = '';
+    users.forEach(u => {
+        const option = document.createElement('option');
+        option.value = u.id;
+        option.textContent = u.username;
+        userSelect.appendChild(option);
+    });
 
-        async function loadChannels(){
-            const guildId = document.getElementById('serverSelect').value;
-            const res = await fetch(`/api/servers/${guildId}/channels`);
-            const channels = await res.json();
-            const sel = document.getElementById('channelSelect');
-            sel.innerHTML='';
-            channels.forEach(c=>{
-                const opt = document.createElement('option');
-                opt.value = c.id;
-                opt.textContent = c.name;
-                sel.appendChild(opt);
-            });
-        }
+    const resRoles = await fetch('/api/roles');
+    const roles = await resRoles.json();
+    const roleSelect = document.getElementById('roleSelect');
+    roleSelect.innerHTML = '';
+    roles.forEach(r => {
+        const option = document.createElement('option');
+        option.value = r.id;
+        option.textContent = r.name;
+        roleSelect.appendChild(option);
+    });
 
-        async function loadUsers(){
-            const guildId = document.getElementById('serverSelect').value;
-            const res = await fetch(`/api/servers/${guildId}/members`);
-            const users = await res.json();
-            const sel = document.getElementById('userSelect');
-            sel.innerHTML='';
-            users.forEach(u=>{
-                const opt = document.createElement('option');
-                opt.value = u.id;
-                opt.textContent = u.tag;
-                sel.appendChild(opt);
-            });
-        }
+    const resChannels = await fetch('/api/channels');
+    const channels = await resChannels.json();
+    const channelSelect = document.getElementById('channelSelect');
+    channelSelect.innerHTML = '';
+    channels.forEach(c => {
+        const option = document.createElement('option');
+        option.value = c.id;
+        option.textContent = c.name;
+        channelSelect.appendChild(option);
+    });
 
-        async function loadRoles(){
-            const guildId = document.getElementById('serverSelect').value;
-            const res = await fetch(`/api/servers/${guildId}/roles`);
-            const roles = await res.json();
-            const sel = document.getElementById('roleSelect');
-            sel.innerHTML='';
-            roles.forEach(r=>{
-                const opt = document.createElement('option');
-                opt.value = r.id;
-                opt.textContent = r.name;
-                sel.appendChild(opt);
-            });
-        }
+} catch(err) {
+    addLog('error', 'Erro ao popular dropdowns: ' + err);
+}
 
-        document.getElementById('serverSelect').addEventListener('change', ()=>{
-            loadChannels();
-            loadUsers();
-            loadRoles();
-        });
+// Atualiza a cada 10s
+setTimeout(populateDropdowns, 10000);
+}
 
-        async function sendMessage(){
-            const guildId = document.getElementById('serverSelect').value;
-            const channelId = document.getElementById('channelSelect').value;
-            const message = document.getElementById('messageText').value;
-            if(!message) return addLog('warning','Mensagem vazia');
-            try{
-                const res = await fetch('/api/send-message',{
-                    method:'POST',
-                    headers:{'Content-Type':'application/json'},
-                    body:JSON.stringify({guildId,channelId,message})
-                });
-                if(res.ok) addLog('info',`Mensagem enviada no canal ${channelId}`);
-                else addLog('error',`Falha ao enviar mensagem: ${await res.text()}`);
-            } catch(err){ addLog('error',`Erro ao enviar mensagem: ${err.message}`); }
-        }
+// -------------------- AÇÕES --------------------
+async function sendMessage() {
+const channelId = document.getElementById('channelSelect').value;
+const message = document.getElementById('messageText').value;
+try {
+    const res = await fetch('/api/send-message', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ channelId, message })
+    });
+    const data = await res.json();
+    addLog('info', `Mensagem enviada: ${data.message}`);
+} catch(err) {
+    addLog('error', 'Erro ao enviar mensagem: ' + err);
+}
+}
 
-        async function createChannel(){
-            const guildId = document.getElementById('serverSelect').value;
-            const name = document.getElementById('channelName').value;
-            const type = document.getElementById('channelType').value;
-            if(!name) return addLog('warning','Nome do canal vazio');
-            try{
-                const res = await fetch('/api/create-channel',{
-                    method:'POST',
-                    headers:{'Content-Type':'application/json'},
-                    body:JSON.stringify({guildId,name,type})
-                });
-                if(res.ok){
-                    const data = await res.json();
-                    addLog('info',`Canal ${data.name} criado com sucesso`);
-                    loadChannels();
-                } else addLog('error',`Falha ao criar canal: ${await res.text()}`);
-            } catch(err){ addLog('error',`Erro ao criar canal: ${err.message}`); }
-        }
+async function createChannel() {
+const name = document.getElementById('channelName').value;
+const type = document.getElementById('channelType').value;
+const guildId = document.getElementById('serverSelect')?.value; // opcional se só 1 servidor
+try {
+    const res = await fetch('/api/create-channel', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ guildId, name, type })
+    });
+    const data = await res.json();
+    addLog('info', `Canal "${data.name}" criado!`);
+} catch(err) {
+    addLog('error', 'Falha ao criar canal: ' + err);
+}
+}
 
-        async function giveRole(){
-            const guildId = document.getElementById('serverSelect').value;
-            const userId = document.getElementById('userSelect').value;
-            const roleId = document.getElementById('roleSelect').value;
-            try{
-                const res = await fetch('/api/set-role',{
-                    method:'POST',
-                    headers:{'Content-Type':'application/json'},
-                    body:JSON.stringify({guildId,userId,roleId})
-                });
-                if(res.ok) addLog('info','Cargo adicionado');
-                else addLog('error',`Falha ao adicionar cargo: ${await res.text()}`);
-            } catch(err){ addLog('error',`Erro ao adicionar cargo: ${err.message}`); }
-        }
+async function giveRole() {
+const userId = document.getElementById('userSelect').value;
+const roleId = document.getElementById('roleSelect').value;
+try {
+    const res = await fetch('/api/give-role', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ userId, roleId })
+    });
+    const data = await res.json();
+    addLog('info', data.message);
+} catch(err) {
+    addLog('error', 'Erro ao adicionar cargo: ' + err);
+}
 
-        async function removeRole(){
-            const guildId = document.getElementById('serverSelect').value;
-            const userId = document.getElementById('userSelect').value;
-            const roleId = document.getElementById('roleSelect').value;
-            try{
-                const res = await fetch('/api/remove-role',{
-                    method:'POST',
-                    headers:{'Content-Type':'application/json'},
-                    body:JSON.stringify({guildId,userId,roleId})
-                });
-                if(res.ok) addLog('info','Cargo removido');
-                else addLog('error',`Falha ao remover cargo: ${await res.text()}`);
-            } catch(err){ addLog('error',`Erro ao remover cargo: ${err.message}`); }
-        }
+}
 
-        function startBot(){ document.getElementById('status').textContent='Online'; addLog('info','Bot iniciado'); }
-        function stopBot(){ document.getElementById('status').textContent='Offline'; addLog('error','Bot parado'); }
+async function removeRole() {
+const userId = document.getElementById('userSelect').value;
+const roleId = document.getElementById('roleSelect').value;
+try {
+    const res = await fetch('/api/remove-role', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ userId, roleId })
+    });
+    const data = await res.json();
+    addLog('info', data.message);
+} catch(err) {
+    addLog('error', 'Erro ao remover cargo: ' + err);
+}
 
-        // Inicializa tudo
-        loadServers();
-        addLog('info','Dashboard pronto');
-    </script>
+// -------------------- BOT --------------------
+function startBot() {
+document.getElementById('status').textContent = 'Online';
+addLog('info', 'Bot iniciado');
+populateDropdowns();
+}
+
+function stopBot() {
+document.getElementById('status').textContent = 'Offline';
+addLog('error', 'Bot parado');
+}
+
+// Inicializa
+addLog('info', 'Dashboard pronto');
+populateDropdowns();
+</script>
 </body>
 </html>
