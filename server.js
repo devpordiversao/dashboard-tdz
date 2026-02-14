@@ -1,109 +1,132 @@
-// server.js - versão estável TDZ Bot
 const express = require('express');
-const bodyParser = require('body-parser');
-const { Client, GatewayIntentBits } = require('discord.js');
+const { Client, GatewayIntentBits, SlashCommandBuilder } = require('discord.js');
 require('dotenv').config();
 
 const app = express();
-app.use(bodyParser.json());
-app.use(express.static('public')); // pasta onde o HTML fica
+const PORT = process.env.PORT || 8080;
 
-// === Inicializa Bot ===
-const bot = new Client({
-    intents: [
-        GatewayIntentBits.Guilds,
-        GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.GuildMembers,
-        GatewayIntentBits.MessageContent
-    ]
-});
+app.use(express.json());
+app.use(express.static('public'));
 
-bot.login(process.env.BOT_TOKEN);
+// Dashboard
+app.get('/', (req, res) => res.sendFile(__dirname + '/public/index.html'));
 
-bot.once('ready', () => {
-    console.log(`Bot logado como ${bot.user.tag}`);
-});
+// --- Bot Discord ---
+const bot = new Client({ intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildMessages
+] });
 
-// === API para enviar mensagem ===
-app.post('/api/send-message', async (req,res)=>{
-    const { guildId, channelName, message } = req.body;
+bot.once('ready', async () => {
+    console.log(`Bot online: ${bot.user.tag}`);
     try {
-        const guild = bot.guilds.cache.get(guildId);
-        if(!guild) return res.status(404).send('Servidor não encontrado');
-
-        const channel = guild.channels.cache.find(c=>c.name===channelName && c.isTextBased());
-        if(!channel) return res.status(404).send('Canal não encontrado');
-
-        await channel.send(message);
-        res.json({status:'ok', message:'Mensagem enviada!'});
-    } catch(err){
-        console.error(err);
-        res.status(500).send(err.message);
+        await bot.application.commands.set([
+            new SlashCommandBuilder().setName('ping').setDescription('Teste do bot')
+            // outros comandos...
+        ]);
+        console.log('✅ Comandos sincronizados!');
+    } catch (e) {
+        console.error('❌ Erro ao sincronizar comandos:', e);
     }
 });
 
-// === API para criar canal ===
-app.post('/api/create-channel', async (req,res)=>{
+const token = process.env.BOT_TOKEN;
+if (!token) console.error('❌ BOT_TOKEN não encontrado no .env');
+else bot.login(token).catch(err => console.error('❌ Erro ao logar o bot:', err));
+
+// --- Endpoints API ---
+
+// Servidores
+app.get('/api/servers', (req,res) => {
+    const guilds = bot.guilds.cache.map(g => ({ id: g.id, name: g.name, icon: g.iconURL(), memberCount: g.memberCount }));
+    res.json(guilds);
+});
+
+// Canais
+app.get('/api/servers/:guildId/channels', (req,res) => {
+    const guild = bot.guilds.cache.get(req.params.guildId);
+    if(!guild) return res.json([]);
+    const channels = guild.channels.cache.map(c => ({ id: c.id, name: c.name }));
+    res.json(channels);
+});
+
+// Membros
+app.get('/api/servers/:guildId/members', async (req,res) => {
+    const guild = bot.guilds.cache.get(req.params.guildId);
+    if(!guild) return res.json([]);
+    const members = await guild.members.fetch();
+    res.json(members.map(m => ({ id: m.user.id, tag: m.user.tag })));
+});
+
+// Cargos
+app.get('/api/servers/:guildId/roles', async (req,res) => {
+    const guild = bot.guilds.cache.get(req.params.guildId);
+    if(!guild) return res.json([]);
+    const roles = await guild.roles.fetch();
+    res.json(roles.map(r => ({ id: r.id, name: r.name })));
+});
+
+// Criar canal
+app.post('/api/create-channel', async (req,res) => {
     const { guildId, name, type } = req.body;
     const guild = bot.guilds.cache.get(guildId);
-    if(!guild) return res.status(404).send('Servidor não encontrado');
+    if(!guild) return res.status(400).send('Servidor não encontrado');
 
-    // Tipo: 0 = texto, 2 = voz
-    const channelType = type.toLowerCase() === 'texto' ? 0 : 2;
+    // **Correção**: tipo como número
+    const channelType = type.toLowerCase() === 'texto' ? 0 : 2; // 0=texto, 2=voz
 
-    try{
-        const channel = await guild.channels.create({name, type: channelType});
-        res.json({status:'ok', id: channel.id, name: channel.name});
-    } catch(err){
-        console.error(err);
+    try {
+        const channel = await guild.channels.create({ name, type: channelType });
+        res.json({ id: channel.id, name: channel.name });
+    } catch(err) {
+        console.error('Erro ao criar canal:', err);
         res.status(500).send(err.message);
     }
 });
 
-// === API para dar cargo ===
-app.post('/api/give-role', async (req,res)=>{
-    const { guildId, userId, roleName } = req.body;
-    try{
-        const guild = bot.guilds.cache.get(guildId);
-        if(!guild) return res.status(404).send('Servidor não encontrado');
+// Dar cargo
+app.post('/api/set-role', async (req,res) => {
+    const { guildId, userId, roleId } = req.body;
+    const guild = bot.guilds.cache.get(guildId);
+    if(!guild) return res.status(400).send('Servidor não encontrado');
 
-        const member = guild.members.cache.get(userId);
-        if(!member) return res.status(404).send('Usuário não encontrado');
-
-        let role = guild.roles.cache.find(r=>r.name===roleName);
-        if(!role) {
-            role = await guild.roles.create({name: roleName, color:'BLUE', mentionable:true});
-        }
-
+    try {
+        const member = await guild.members.fetch(userId);
+        const role = await guild.roles.fetch(roleId);
         await member.roles.add(role);
-        res.json({status:'ok', message:`Cargo ${roleName} dado para ${member.user.tag}`});
-    } catch(err){
-        console.error(err);
-        res.status(500).send(err.message);
-    }
+        res.json({ userId, roleId });
+    } catch(err) { console.error(err); res.status(500).send(err.message); }
 });
 
-// === API para remover cargo ===
-app.post('/api/remove-role', async (req,res)=>{
-    const { guildId, userId, roleName } = req.body;
-    try{
-        const guild = bot.guilds.cache.get(guildId);
-        if(!guild) return res.status(404).send('Servidor não encontrado');
+// Remover cargo
+app.post('/api/remove-role', async (req,res) => {
+    const { guildId, userId, roleId } = req.body;
+    const guild = bot.guilds.cache.get(guildId);
+    if(!guild) return res.status(400).send('Servidor não encontrado');
 
-        const member = guild.members.cache.get(userId);
-        if(!member) return res.status(404).send('Usuário não encontrado');
-
-        const role = guild.roles.cache.find(r=>r.name===roleName);
-        if(!role) return res.status(404).send('Cargo não encontrado');
-
+    try {
+        const member = await guild.members.fetch(userId);
+        const role = await guild.roles.fetch(roleId);
         await member.roles.remove(role);
-        res.json({status:'ok', message:`Cargo ${roleName} removido de ${member.user.tag}`});
-    } catch(err){
-        console.error(err);
-        res.status(500).send(err.message);
-    }
+        res.json({ userId, roleId });
+    } catch(err) { console.error(err); res.status(500).send(err.message); }
 });
 
-// === Inicia servidor web ===
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, ()=> console.log(`Servidor rodando na porta ${PORT}`));
+// Enviar mensagem
+app.post('/api/send-message', async (req,res) => {
+    const { guildId, channelId, message } = req.body;
+    const guild = bot.guilds.cache.get(guildId);
+    if(!guild) return res.status(400).send('Servidor não encontrado');
+
+    const channel = guild.channels.cache.get(channelId);
+    if(!channel) return res.status(400).send('Canal não encontrado');
+
+    try {
+        await channel.send(message);
+        res.json({ channelId, message });
+    } catch(err) { console.error(err); res.status(500).send(err.message); }
+});
+
+// Start server
+app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
