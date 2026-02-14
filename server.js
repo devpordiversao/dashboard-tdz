@@ -2,53 +2,26 @@
 const express = require('express');
 const { Client, GatewayIntentBits, PermissionFlagsBits, SlashCommandBuilder } = require('discord.js');
 require('dotenv').config();
-const bodyParser = require('body-parser');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-// --- MIDDLEWARE ---
-app.use(bodyParser.json());
+// Serve dashboard
 app.use(express.static('public'));
+app.get('/', (req, res) => res.sendFile(__dirname + '/public/index.html'));
 
-// --- SERVE DASHBOARD ---
-app.get('/', (req, res) => {
-    res.sendFile(__dirname + '/public/index.html');
-});
+// --- Bot Discord ---
+const bot = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessages] });
 
-// --- BOT DISCORD ---
-const bot = new Client({
-    intents: [
-        GatewayIntentBits.Guilds,
-        GatewayIntentBits.GuildMembers,
-        GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.MessageContent
-    ]
-});
-
-// Funções utilitárias
-function toSmallCaps(text) {
-    const normal = "abcdefghijklmnopqrstuvwxyz";
-    const smallCaps = "ᴀʙᴄᴅᴇғɢʜɪᴊᴋʟᴍɴᴏᴘǫʀsᴛᴜᴠʷxʏᴢ";
-    return text.split('').map(c => normal.includes(c.toLowerCase()) ? smallCaps[normal.indexOf(c.toLowerCase())] : c).join('');
-}
-
-// --- SLASH COMMANDS ---
 bot.once('ready', async () => {
     console.log(`Bot online: ${bot.user.tag}`);
 
     try {
         await bot.application.commands.set([
             new SlashCommandBuilder().setName('ping').setDescription('Teste do bot'),
-            new SlashCommandBuilder().setName('setvip')
-                .setDescription('Dá o cargo Divulgador VIP para um usuário')
-                .addUserOption(opt => opt.setName('usuario').setDescription('Usuário').setRequired(true))
-                .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
-            new SlashCommandBuilder().setName('sendmsg')
-                .setDescription('Envia mensagem em um canal')
-                .addChannelOption(opt => opt.setName('canal').setDescription('Canal').setRequired(true))
-                .addStringOption(opt => opt.setName('mensagem').setDescription('Mensagem').setRequired(true))
-                .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+            new SlashCommandBuilder().setName('criar_canais').setDescription('Cria canais VIP e de divulgação').setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+            new SlashCommandBuilder().setName('limpar_canais').setDescription('Remove todos os canais criados pelo bot').setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+            new SlashCommandBuilder().setName('setvip').setDescription('Dá o cargo Divulgador VIP para um usuário').addUserOption(opt => opt.setName('usuario').setDescription('Usuário').setRequired(true)).setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
         ]);
         console.log('✅ Comandos slash sincronizados!');
     } catch (e) {
@@ -56,39 +29,14 @@ bot.once('ready', async () => {
     }
 });
 
-// --- INTERAÇÕES SLASH ---
-bot.on('interactionCreate', async interaction => {
-    if (!interaction.isCommand()) return;
+const token = process.env.BOT_TOKEN;
+if (!token) {
+    console.error('❌ BOT_TOKEN não encontrado no .env ou variável do Railway');
+} else {
+    bot.login(token).catch(err => console.error('❌ Erro ao logar o bot:', err));
+}
 
-    const { commandName, options } = interaction;
-
-    try {
-        if (commandName === 'ping') {
-            await interaction.reply('Pong!');
-        } else if (commandName === 'setvip') {
-            const user = options.getUser('usuario');
-            const guild = interaction.guild;
-            const roleName = toSmallCaps('divulgador vip') + ' 💎';
-            const role = guild.roles.cache.find(r => r.name === roleName);
-            if (!role) return interaction.reply('Cargo não encontrado!');
-            const member = guild.members.cache.get(user.id);
-            await member.roles.add(role);
-            await interaction.reply(`${user.tag} recebeu o cargo VIP!`);
-        } else if (commandName === 'sendmsg') {
-            const channel = options.getChannel('canal');
-            const message = options.getString('mensagem');
-            if (!channel.isTextBased()) return interaction.reply('Canal inválido!');
-            await channel.send(message);
-            await interaction.reply(`Mensagem enviada em ${channel.name}`);
-        }
-    } catch (err) {
-        console.error(err);
-        await interaction.reply({ content: 'Erro ao executar comando.', ephemeral: true });
-    }
-});
-
-// --- API ENDPOINTS PARA DASHBOARD ---
-// Pega servidores do bot
+// --- Endpoints para o dashboard ---
 app.get('/api/servers', (req, res) => {
     const guilds = bot.guilds.cache.map(g => ({
         id: g.id,
@@ -99,7 +47,6 @@ app.get('/api/servers', (req, res) => {
     res.json(guilds);
 });
 
-// Pega canais de um servidor
 app.get('/api/servers/:guildId/channels', (req, res) => {
     const guild = bot.guilds.cache.get(req.params.guildId);
     if (!guild) return res.status(404).json({ error: 'Servidor não encontrado' });
@@ -110,7 +57,6 @@ app.get('/api/servers/:guildId/channels', (req, res) => {
     res.json(channels);
 });
 
-// Pega membros de um servidor
 app.get('/api/servers/:guildId/members', (req, res) => {
     const guild = bot.guilds.cache.get(req.params.guildId);
     if (!guild) return res.status(404).json({ error: 'Servidor não encontrado' });
@@ -121,46 +67,34 @@ app.get('/api/servers/:guildId/members', (req, res) => {
     res.json(members);
 });
 
-// Pega cargos de um servidor
-app.get('/api/servers/:guildId/roles', (req, res) => {
-    const guild = bot.guilds.cache.get(req.params.guildId);
-    if (!guild) return res.status(404).json({ error: 'Servidor não encontrado' });
-    const roles = guild.roles.cache.map(r => ({
-        id: r.id,
-        name: r.name
-    }));
-    res.json(roles);
-});
-
-// Envia mensagem via dashboard
-app.post('/api/send-message', async (req, res) => {
+app.post('/api/send-message', express.json(), async (req, res) => {
     const { guildId, channelId, message } = req.body;
-    const guild = bot.guilds.cache.get(guildId);
-    if (!guild) return res.status(404).json({ error: 'Servidor não encontrado' });
-    const channel = guild.channels.cache.get(channelId);
-    if (!channel || !channel.isTextBased()) return res.status(404).json({ error: 'Canal inválido' });
-    await channel.send(message);
-    res.json({ success: true });
+    try {
+        const guild = bot.guilds.cache.get(guildId);
+        if (!guild) return res.status(404).json({ error: 'Servidor não encontrado' });
+        const channel = guild.channels.cache.get(channelId);
+        if (!channel || !channel.isTextBased()) return res.status(404).json({ error: 'Canal não encontrado' });
+        await channel.send(message);
+        res.json({ success: true });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: 'Erro ao enviar mensagem' });
+    }
 });
 
-// Adiciona cargo a um usuário
-app.post('/api/set-role', async (req, res) => {
+app.post('/api/set-role', express.json(), async (req, res) => {
     const { guildId, userId, roleId } = req.body;
-    const guild = bot.guilds.cache.get(guildId);
-    const member = guild.members.cache.get(userId);
-    const role = guild.roles.cache.get(roleId);
-    if (!guild || !member || !role) return res.status(404).json({ error: 'Algo inválido' });
-    await member.roles.add(role);
-    res.json({ success: true });
+    try {
+        const guild = bot.guilds.cache.get(guildId);
+        if (!guild) return res.status(404).json({ error: 'Servidor não encontrado' });
+        const member = await guild.members.fetch(userId);
+        if (!member) return res.status(404).json({ error: 'Usuário não encontrado' });
+        await member.roles.add(roleId);
+        res.json({ success: true });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: 'Erro ao adicionar cargo' });
+    }
 });
 
-// --- LOGIN BOT ---
-const token = process.env.BOT_TOKEN;
-if (!token) {
-    console.error('❌ BOT_TOKEN não encontrado no .env ou variável do Railway');
-} else {
-    bot.login(token).catch(err => console.error('❌ Erro ao logar o bot:', err));
-}
-
-// --- INICIAR SERVIDOR ---
 app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
