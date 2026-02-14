@@ -28,6 +28,10 @@ input, textarea, select { width: 100%; padding: 10px; margin: 10px 0; background
 </style>
 </head>
 <body>
+
+<!-- Servidor invisível para controlar dropdowns -->
+<select id="serverSelect" style="display:none;"></select>
+
 <div class="navbar">
 <h1>🤖 TDZ Bot Dashboard</h1>
 <div>Status: <span id="status">Offline</span></div>
@@ -100,48 +104,50 @@ function showTab(tab) {
     document.getElementById(tab).classList.add('active');
 }
 
-// --- Funções já prontas da Claude ---
-function addLog(type, msg) {
-    const log = document.getElementById('logs');
-    const entry = document.createElement('div');
-    entry.className = 'log-entry '+type;
-    entry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+// --- Funções da Claude ---
+function addLog(type,msg){
+    const log=document.getElementById('logs');
+    const entry=document.createElement('div');
+    entry.className='log-entry '+type;
+    entry.textContent=`[${new Date().toLocaleTimeString()}] ${msg}`;
     log.appendChild(entry);
-    log.scrollTop = log.scrollHeight;
+    log.scrollTop=log.scrollHeight;
 }
-
-function updateBotStatus(status) {
-    document.getElementById('status').textContent = status;
-}
-
-function addServer(id,name,icon,memberCount) {
-    const list = document.getElementById('serversList');
-    const div = document.createElement('div');
-    div.textContent = `${name} (${memberCount} membros)`;
+function updateBotStatus(status){ document.getElementById('status').textContent=status; }
+function addServer(id,name,icon,memberCount){
+    const list=document.getElementById('serversList');
+    const div=document.createElement('div');
+    div.textContent=`${name} (${memberCount} membros)`;
+    div.style.cursor='pointer';
+    div.onclick=()=>{ document.getElementById('serverSelect').value=id; loadChannels(); addLog('info',`Servidor ${name} selecionado`) };
     list.appendChild(div);
 }
-
-function addCommand(name,time) {
-    addLog('info', `Comando ${name} executado em ${time}`);
-}
+function addCommand(name,time){ addLog('info',`Comando ${name} executado em ${time}`); }
 
 // --- Nosso JS funcional ---
-// Carregar servidores
-async function loadServers() {
-    const res = await fetch('/api/servers');
-    const servers = await res.json();
+async function loadServers(){
+    const res=await fetch('/api/servers');
+    const servers=await res.json();
+    const serverSelect=document.getElementById('serverSelect');
+    serverSelect.innerHTML='';
     document.getElementById('serversList').innerHTML='';
-    document.getElementById('serverCount').textContent = servers.length;
-    servers.forEach(s=>addServer(s.id,s.name,s.icon,s.memberCount));
+    document.getElementById('serverCount').textContent=servers.length;
+    servers.forEach(s=>{
+        const opt=document.createElement('option');
+        opt.value=s.id;
+        opt.textContent=s.name;
+        serverSelect.appendChild(opt);
+        addServer(s.id,s.name,s.icon,s.memberCount);
+    });
+    serverSelect.value=servers[0]?.id;
     loadChannels();
 }
 
-// Carregar canais
-async function loadChannels() {
-    const guildId = document.getElementById('serverSelect').value;
-    const res = await fetch(`/api/servers/${guildId}/channels`);
-    const channels = await res.json();
-    const channelSelect = document.getElementById('channelSelect');
+async function loadChannels(){
+    const guildId=document.getElementById('serverSelect').value;
+    const res=await fetch(`/api/servers/${guildId}/channels`);
+    const channels=await res.json();
+    const channelSelect=document.getElementById('channelSelect');
     channelSelect.innerHTML='';
     channels.forEach(c=>{
         const opt=document.createElement('option');
@@ -153,12 +159,11 @@ async function loadChannels() {
     loadRoles();
 }
 
-// Carregar membros
-async function loadMembers() {
-    const guildId = document.getElementById('serverSelect').value;
-    const res = await fetch(`/api/servers/${guildId}/members`);
-    const members = await res.json();
-    const userSelect = document.getElementById('userSelect');
+async function loadMembers(){
+    const guildId=document.getElementById('serverSelect').value;
+    const res=await fetch(`/api/servers/${guildId}/members`);
+    const members=await res.json();
+    const userSelect=document.getElementById('userSelect');
     userSelect.innerHTML='';
     members.forEach(m=>{
         const opt=document.createElement('option');
@@ -168,12 +173,11 @@ async function loadMembers() {
     });
 }
 
-// Carregar cargos
-async function loadRoles() {
-    const guildId = document.getElementById('serverSelect').value;
-    const res = await fetch(`/api/servers/${guildId}/roles`);
-    const roles = await res.json();
-    const roleSelect = document.getElementById('roleSelect');
+async function loadRoles(){
+    const guildId=document.getElementById('serverSelect').value;
+    const res=await fetch(`/api/servers/${guildId}/roles`);
+    const roles=await res.json();
+    const roleSelect=document.getElementById('roleSelect');
     roleSelect.innerHTML='';
     roles.forEach(r=>{
         const opt=document.createElement('option');
@@ -184,70 +188,71 @@ async function loadRoles() {
 }
 
 // Funções de ação
-async function sendMessage() {
-    const guildId = document.getElementById('serverSelect').value;
-    const channelId = document.getElementById('channelSelect').value;
-    const message = document.getElementById('messageText').value;
+async function sendMessage(){
+    const guildId=document.getElementById('serverSelect').value;
+    const channelId=document.getElementById('channelSelect').value;
+    const message=document.getElementById('messageText').value;
     await fetch('/api/send-message',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({guildId,channelId,message})
     });
-    addLog('info', `Mensagem enviada em canal ID ${channelId}`);
+    addLog('info',`Mensagem enviada em canal ID ${channelId}`);
 }
 
-async function createChannel() {
-    const guildId = document.getElementById('serverSelect').value;
-    const name = document.getElementById('channelName').value;
-    const type = document.getElementById('channelType').value;
+async function createChannel(){
+    const guildId=document.getElementById('serverSelect').value;
+    const name=document.getElementById('channelName').value;
+    const type=document.getElementById('channelType').value;
     await fetch('/api/create-channel',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({guildId,name,type})
     });
-    addLog('info', `Canal ${name} criado`);
+    addLog('info',`Canal ${name} criado`);
 }
 
-async function giveRole() {
-    const guildId = document.getElementById('serverSelect').value;
-    const userId = document.getElementById('userInput').value || document.getElementById('userSelect').value;
-    const roleId = document.getElementById('roleInput').value || document.getElementById('roleSelect').value;
+async function giveRole(){
+    const guildId=document.getElementById('serverSelect').value;
+    const userId=document.getElementById('userInput').value||document.getElementById('userSelect').value;
+    const roleId=document.getElementById('roleInput').value||document.getElementById('roleSelect').value;
     await fetch('/api/set-role',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({guildId,userId,roleId})
     });
-    addLog('info', `Cargo ID ${roleId} dado a usuário ${userId}`);
+    addLog('info',`Cargo ID ${roleId} dado a usuário ${userId}`);
 }
 
-async function removeRole() {
-    const guildId = document.getElementById('serverSelect').value;
-    const userId = document.getElementById('userInput').value || document.getElementById('userSelect').value;
-    const roleId = document.getElementById('roleInput').value || document.getElementById('roleSelect').value;
+async function removeRole(){
+    const guildId=document.getElementById('serverSelect').value;
+    const userId=document.getElementById('userInput').value||document.getElementById('userSelect').value;
+    const roleId=document.getElementById('roleInput').value||document.getElementById('roleSelect').value;
     await fetch('/api/remove-role',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({guildId,userId,roleId})
     });
-    addLog('warning', `Cargo ID ${roleId} removido de usuário ${userId}`);
+    addLog('warning',`Cargo ID ${roleId} removido de usuário ${userId}`);
 }
 
-// Bot start/stop
-async function startBot() {
+async function startBot(){
     await fetch('/api/bot-start',{method:'POST'});
     updateBotStatus('Online');
     addLog('info','Bot iniciado');
 }
 
-async function stopBot() {
+async function stopBot(){
     await fetch('/api/bot-stop',{method:'POST'});
     updateBotStatus('Offline');
     addLog('error','Bot parado');
 }
+
+function clearLogs(){ document.getElementById('logs').innerHTML=''; }
 
 // Inicialização
 addLog('info','Dashboard pronto');
 loadServers();
 </script>
 </body>
-</html>
+    </html>
