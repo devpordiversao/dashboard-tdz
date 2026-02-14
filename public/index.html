@@ -38,7 +38,6 @@
   </main>
 
   <script>
-    // Puxa servidores do bot
     function loadServers() {
       fetch('/api/servers')
         .then(res => res.json())
@@ -55,7 +54,6 @@
         });
     }
 
-    // Puxa comandos recentes
     function loadCommands() {
       fetch('/api/commands')
         .then(res => res.json())
@@ -74,7 +72,6 @@
         });
     }
 
-    // Botões Pausar/Ativar
     document.getElementById('pause-btn').addEventListener('click', () => {
       fetch('/api/pause', { method: 'POST' }).then(loadServers).then(loadCommands);
     });
@@ -83,15 +80,9 @@
       fetch('/api/resume', { method: 'POST' }).then(loadServers).then(loadCommands);
     });
 
-    // Atualiza tudo ao carregar
     loadServers();
     loadCommands();
-
-    // Atualiza periodicamente
-    setInterval(() => {
-      loadServers();
-      loadCommands();
-    }, 5000);
+    setInterval(() => { loadServers(); loadCommands(); }, 5000);
   </script>
 </body>
 </html>
