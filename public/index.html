@@ -1,76 +1,97 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TDZ Dashboard</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TDZ Dashboard</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <header>
-        <h1>TDZ Dashboard</h1>
-        <a href="/login" class="btn-login">Entrar com Discord</a>
-    </header>
+  <header>
+    <h1>TDZ Dashboard</h1>
+  </header>
 
-    <main>
-        <section class="servers">
-            <h2>Servidores do Bot</h2>
-            <div class="server-cards">
-                <!-- Cards preenchidos via JS -->
-            </div>
-        </section>
+  <main>
+    <section class="servers">
+      <h2>Servidores do Bot</h2>
+      <div class="server-cards"></div>
+    </section>
 
-        <section class="commands">
-            <h2>Comandos Recentes</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Comando</th>
-                        <th>Usuário</th>
-                        <th>Data/Hora</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Preenchido via JS -->
-                </tbody>
-            </table>
-        </section>
-    </main>
+    <section class="commands">
+      <h2>Comandos Recentes</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Comando</th>
+            <th>Usuário</th>
+            <th>Data/Hora</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
 
-    <script>
+    <section class="controls">
+      <button id="pause-btn">Pausar Bot</button>
+      <button id="resume-btn">Ativar Bot</button>
+    </section>
+  </main>
+
+  <script>
     // Puxa servidores do bot
-    fetch('/api/servers')
-      .then(res => res.json())
-      .then(servers => {
-        const container = document.querySelector('.server-cards');
-        container.innerHTML = '';
-        servers.forEach(s => {
-          container.innerHTML += `
-            <div class="card">
-              <h3>${s.name}</h3>
-              <button>Pausar Bot</button>
-              <button>Ativar Bot</button>
-            </div>
-          `;
+    function loadServers() {
+      fetch('/api/servers')
+        .then(res => res.json())
+        .then(servers => {
+          const container = document.querySelector('.server-cards');
+          container.innerHTML = '';
+          servers.forEach(s => {
+            container.innerHTML += `
+              <div class="card">
+                <h3>${s.name}</h3>
+              </div>
+            `;
+          });
         });
-      });
+    }
 
     // Puxa comandos recentes
-    fetch('/api/commands')
-      .then(res => res.json())
-      .then(commands => {
-        const tbody = document.querySelector('table tbody');
-        tbody.innerHTML = '';
-        commands.forEach(c => {
-          tbody.innerHTML += `
-            <tr>
-              <td>${c.command}</td>
-              <td>${c.user}</td>
-              <td>${c.date}</td>
-            </tr>
-          `;
+    function loadCommands() {
+      fetch('/api/commands')
+        .then(res => res.json())
+        .then(commands => {
+          const tbody = document.querySelector('table tbody');
+          tbody.innerHTML = '';
+          commands.forEach(c => {
+            tbody.innerHTML += `
+              <tr>
+                <td>${c.command}</td>
+                <td>${c.user}</td>
+                <td>${c.date}</td>
+              </tr>
+            `;
+          });
         });
-      });
-    </script>
+    }
+
+    // Botões Pausar/Ativar
+    document.getElementById('pause-btn').addEventListener('click', () => {
+      fetch('/api/pause', { method: 'POST' }).then(loadServers).then(loadCommands);
+    });
+
+    document.getElementById('resume-btn').addEventListener('click', () => {
+      fetch('/api/resume', { method: 'POST' }).then(loadServers).then(loadCommands);
+    });
+
+    // Atualiza tudo ao carregar
+    loadServers();
+    loadCommands();
+
+    // Atualiza periodicamente
+    setInterval(() => {
+      loadServers();
+      loadCommands();
+    }, 5000);
+  </script>
 </body>
 </html>
