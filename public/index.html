@@ -6,7 +6,7 @@
 <title>TDZ Bot Dashboard</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
-body { font-family: Arial, sans-serif; background: linear-gradient(135deg,#161620,#1e1e2e); color:#fff; padding:20px; }
+body { font-family: Arial, sans-serif; background:#161620; color:#fff; padding:20px; }
 .navbar { background:#2a2a3e; padding:20px; border-radius:10px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center; }
 h1 { color:#5865F2; }
 .card { background:#2a2a3e; padding:20px; border-radius:10px; margin-bottom:20px; }
@@ -43,7 +43,6 @@ input, textarea, select { width:100%; padding:10px; margin:10px 0; background:#1
 <div class="tab active" onclick="showTab('messages')">📨 Mensagens</div>
 <div class="tab" onclick="showTab('channels')">📁 Canais</div>
 <div class="tab" onclick="showTab('roles')">🎭 Cargos</div>
-<div class="tab" onclick="showTab('commands')">⚡ Comandos</div>
 </div>
 
 <div class="tab-content active" id="messages">
@@ -75,12 +74,6 @@ input, textarea, select { width:100%; padding:10px; margin:10px 0; background:#1
 <div style="margin-top:10px;">
 <button class="btn btn-success" onclick="giveRole()">➕ Dar Cargo</button>
 <button class="btn btn-danger" onclick="removeRole()">➖ Remover</button>
-</div>
-</div>
-
-<div class="tab-content" id="commands">
-<button class="btn btn-success" onclick="startBot()">▶️ Iniciar</button>
-<button class="btn btn-danger" onclick="stopBot()">⏹️ Parar</button>
 </div>
 </div>
 
@@ -119,7 +112,7 @@ let channel=document.getElementById('channelSelect').value;
 let msg=document.getElementById('messageText').value;
 if(!channel||!msg){addLog('warning','Selecione canal e escreva mensagem'); return;}
 addLog('info',`Mensagem enviada para ${channel}: ${msg}`);
-// Aqui faria fetch POST para /api/send-message
+// fetch POST /api/send-message
 }
 
 // === Canais ===
@@ -129,7 +122,7 @@ let type=document.getElementById('channelType').value;
 if(!name){addLog('warning','Digite o nome do canal'); return;}
 let typeCode=type.toLowerCase()==='texto'?0:2;
 addLog('info',`Canal "${name}" criado como ${type}`);
-// Aqui faria fetch POST para /api/create-channel
+// fetch POST /api/create-channel
 }
 
 // === Cargos ===
@@ -138,17 +131,17 @@ let user=document.getElementById('userInput').value||document.getElementById('us
 let role=document.getElementById('roleInput').value||document.getElementById('roleSelect').value;
 if(!user||!role){addLog('warning','Selecione usuário e cargo'); return;}
 addLog('info',`Cargo "${role}" dado a ${user}`);
-// Aqui faria fetch POST para /api/give-role
+// fetch POST /api/give-role
 }
 async function removeRole(){
 let user=document.getElementById('userInput').value||document.getElementById('userSelect').value;
 let role=document.getElementById('roleInput').value||document.getElementById('roleSelect').value;
 if(!user||!role){addLog('warning','Selecione usuário e cargo'); return;}
 addLog('info',`Cargo "${role}" removido de ${user}`);
-// Aqui faria fetch POST para /api/remove-role
+// fetch POST /api/remove-role
 }
 
-// === Inicializa dropdowns fictícios (pode ser substituído por fetch real) ===
+// === Inicializa dropdowns fictícios ===
 const exampleUsers=['Rafa','Clara','Lucas','Henrique'];
 const exampleRoles=['Admin','Mod','VIP','Membro'];
 const exampleChannels=['geral','avisos','vip'];
@@ -162,7 +155,6 @@ exampleUsers.forEach(u=>{let o=document.createElement('option'); o.value=o.textC
 exampleRoles.forEach(r=>{let o=document.createElement('option'); o.value=o.textContent=r; roleSelect.appendChild(o);});
 exampleChannels.forEach(c=>{let o=document.createElement('option'); o.value=o.textContent=c; channelSelect.appendChild(o);});
 }
-
 populateDropdowns();
 addLog('info','Dashboard pronto');
 </script>
