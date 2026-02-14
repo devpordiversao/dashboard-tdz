@@ -6,28 +6,29 @@
 <title>TDZ Bot Dashboard</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #161620, #1e1e2e); color: #fff; padding: 20px; }
-.navbar { background: #2a2a3e; padding: 20px; border-radius: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
-h1 { color: #5865F2; }
-.card { background: #2a2a3e; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
-.tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #444; }
-.tab { padding: 10px 20px; cursor: pointer; border-bottom: 3px solid transparent; }
-.tab.active { color: #5865F2; border-bottom-color: #5865F2; }
-.tab-content { display: none; }
-.tab-content.active { display: block; }
-input, textarea, select { width: 100%; padding: 10px; margin: 10px 0; background: #161620; border: 2px solid #444; border-radius: 5px; color: #fff; }
-.btn { padding: 10px 20px; margin: 5px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
-.btn-primary { background: #5865F2; color: white; }
-.btn-success { background: #43B581; color: white; }
-.btn-danger { background: #F04747; color: white; }
-.logs { background: #000; padding: 15px; border-radius: 5px; max-height: 300px; overflow-y: auto; font-family: monospace; }
-.log-entry { padding: 5px 0; }
-.info { color: #43B581; }
-.error { color: #F04747; }
-.warning { color: #FAA61A; }
+body { font-family: Arial, sans-serif; background: linear-gradient(135deg,#161620,#1e1e2e); color:#fff; padding:20px; }
+.navbar { background:#2a2a3e; padding:20px; border-radius:10px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center; }
+h1 { color:#5865F2; }
+.card { background:#2a2a3e; padding:20px; border-radius:10px; margin-bottom:20px; }
+.tabs { display:flex; gap:10px; margin-bottom:20px; border-bottom:2px solid #444; }
+.tab { padding:10px 20px; cursor:pointer; border-bottom:3px solid transparent; }
+.tab.active { color:#5865F2; border-bottom-color:#5865F2; }
+.tab-content { display:none; }
+.tab-content.active { display:block; }
+input,textarea,select { width:100%; padding:10px; margin:10px 0; background:#161620; border:2px solid #444; border-radius:5px; color:#fff; }
+.btn { padding:10px 20px; margin:5px; border:none; border-radius:5px; cursor:pointer; font-weight:bold; }
+.btn-primary { background:#5865F2; color:white; }
+.btn-success { background:#43B581; color:white; }
+.btn-danger { background:#F04747; color:white; }
+.logs { background:#000; padding:15px; border-radius:5px; max-height:300px; overflow-y:auto; font-family:monospace; }
+.log-entry { padding:5px 0; }
+.info { color:#43B581; }
+.error { color:#F04747; }
+.warning { color:#FAA61A; }
 </style>
 </head>
 <body>
+
 <div class="navbar">
 <h1>🤖 TDZ Bot Dashboard</h1>
 <div>Status: <span id="status">Offline</span></div>
@@ -75,8 +76,15 @@ input, textarea, select { width: 100%; padding: 10px; margin: 10px 0; background
 </div>
 
 <div class="tab-content" id="commands">
-<button class="btn btn-success" onclick="startBot()">▶️ Iniciar</button>
-<button class="btn btn-danger" onclick="stopBot()">⏹️ Parar</button>
+<h3>Comandos Rápidos</h3>
+<button class="btn btn-primary" onclick="runCommand('embed')">🖼️ Embed</button>
+<button class="btn btn-primary" onclick="runCommand('sugerir')">💡 Sugerir</button>
+<button class="btn btn-primary" onclick="runCommand('stats')">📊 Stats</button>
+<button class="btn btn-primary" onclick="runCommand('relatorio')">📋 Relatório</button>
+<button class="btn btn-primary" onclick="runCommand('backup')">💾 Backup</button>
+<br><br>
+<button class="btn btn-success" onclick="startBot()">▶️ Iniciar Bot</button>
+<button class="btn btn-danger" onclick="stopBot()">⏹️ Parar Bot</button>
 </div>
 </div>
 
@@ -86,151 +94,104 @@ input, textarea, select { width: 100%; padding: 10px; margin: 10px 0; background
 </div>
 
 <script>
-function showTab(tab) {
-document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+function showTab(tab){
+document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
 event.target.classList.add('active');
 document.getElementById(tab).classList.add('active');
 }
 
-function addLog(type, msg) {
-const log = document.getElementById('logs');
-const entry = document.createElement('div');
-entry.className = 'log-entry ' + type;
-entry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+function addLog(type,msg){
+const log=document.getElementById('logs');
+const entry=document.createElement('div');
+entry.className='log-entry '+type;
+entry.textContent=`[${new Date().toLocaleTimeString()}] ${msg}`;
 log.appendChild(entry);
-log.scrollTop = log.scrollHeight;
+log.scrollTop=log.scrollHeight;
 }
 
-function clearLogs() {
-document.getElementById('logs').innerHTML = '';
+function clearLogs(){document.getElementById('logs').innerHTML='';}
+
+// Simula preenchimento dos dropdowns
+function populateDropdowns(){
+fetch('/api/get-users')
+.then(r=>r.json())
+.then(data=>{
+const userSelect=document.getElementById('userSelect');
+userSelect.innerHTML='';
+data.forEach(u=>{
+let opt=document.createElement('option');
+opt.value=u.id; opt.text=u.username; userSelect.appendChild(opt);
+});
+});
+
+fetch('/api/get-roles')
+.then(r=>r.json())
+.then(data=>{
+const roleSelect=document.getElementById('roleSelect');
+roleSelect.innerHTML='';
+data.forEach(r=>{
+let opt=document.createElement('option');
+opt.value=r.id; opt.text=r.name; roleSelect.appendChild(opt);
+});
+});
+
+fetch('/api/get-channels')
+.then(r=>r.json())
+.then(data=>{
+const channelSelect=document.getElementById('channelSelect');
+channelSelect.innerHTML='';
+data.forEach(c=>{
+let opt=document.createElement('option');
+opt.value=c.id; opt.text=c.name; channelSelect.appendChild(opt);
+});
+});
 }
 
-// -------------------- FUNÇÕES DE DROPDOWN --------------------
-async function populateDropdowns() {
-try {
-    const resUsers = await fetch('/api/users');
-    const users = await resUsers.json();
-    const userSelect = document.getElementById('userSelect');
-    userSelect.innerHTML = '';
-    users.forEach(u => {
-        const option = document.createElement('option');
-        option.value = u.id;
-        option.textContent = u.username;
-        userSelect.appendChild(option);
-    });
-
-    const resRoles = await fetch('/api/roles');
-    const roles = await resRoles.json();
-    const roleSelect = document.getElementById('roleSelect');
-    roleSelect.innerHTML = '';
-    roles.forEach(r => {
-        const option = document.createElement('option');
-        option.value = r.id;
-        option.textContent = r.name;
-        roleSelect.appendChild(option);
-    });
-
-    const resChannels = await fetch('/api/channels');
-    const channels = await resChannels.json();
-    const channelSelect = document.getElementById('channelSelect');
-    channelSelect.innerHTML = '';
-    channels.forEach(c => {
-        const option = document.createElement('option');
-        option.value = c.id;
-        option.textContent = c.name;
-        channelSelect.appendChild(option);
-    });
-
-} catch(err) {
-    addLog('error', 'Erro ao popular dropdowns: ' + err);
+// Ações do dashboard
+function sendMessage(){
+const canal=document.getElementById('channelSelect').value;
+const msg=document.getElementById('messageText').value;
+fetch('/api/send-message',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({channelId:canal,message:msg})})
+.then(r=>r.json()).then(r=>addLog('info','Mensagem enviada!')).catch(e=>addLog('error','Erro ao enviar'));
 }
 
-// Atualiza a cada 10s
-setTimeout(populateDropdowns, 10000);
+function createChannel(){
+const name=document.getElementById('channelName').value;
+const type=document.getElementById('channelType').value;
+fetch('/api/create-channel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({guildId:'SERVIDOR_ID_AQUI',name:name,type:type})})
+.then(r=>r.json()).then(r=>addLog('info','Canal '+r.name+' criado!')).catch(e=>addLog('error','Erro ao criar canal'));
 }
 
-// -------------------- AÇÕES --------------------
-async function sendMessage() {
-const channelId = document.getElementById('channelSelect').value;
-const message = document.getElementById('messageText').value;
-try {
-    const res = await fetch('/api/send-message', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ channelId, message })
-    });
-    const data = await res.json();
-    addLog('info', `Mensagem enviada: ${data.message}`);
-} catch(err) {
-    addLog('error', 'Erro ao enviar mensagem: ' + err);
-}
+function giveRole(){
+const user=document.getElementById('userSelect').value;
+const role=document.getElementById('roleSelect').value;
+fetch('/api/give-role',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:user,roleId:role})})
+.then(r=>r.json()).then(r=>addLog('info','Cargo dado!')).catch(e=>addLog('error','Erro ao dar cargo'));
 }
 
-async function createChannel() {
-const name = document.getElementById('channelName').value;
-const type = document.getElementById('channelType').value;
-const guildId = document.getElementById('serverSelect')?.value; // opcional se só 1 servidor
-try {
-    const res = await fetch('/api/create-channel', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ guildId, name, type })
-    });
-    const data = await res.json();
-    addLog('info', `Canal "${data.name}" criado!`);
-} catch(err) {
-    addLog('error', 'Falha ao criar canal: ' + err);
-}
+function removeRole(){
+const user=document.getElementById('userSelect').value;
+const role=document.getElementById('roleSelect').value;
+fetch('/api/remove-role',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:user,roleId:role})})
+.then(r=>r.json()).then(r=>addLog('info','Cargo removido!')).catch(e=>addLog('error','Erro ao remover cargo'));
 }
 
-async function giveRole() {
-const userId = document.getElementById('userSelect').value;
-const roleId = document.getElementById('roleSelect').value;
-try {
-    const res = await fetch('/api/give-role', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ userId, roleId })
-    });
-    const data = await res.json();
-    addLog('info', data.message);
-} catch(err) {
-    addLog('error', 'Erro ao adicionar cargo: ' + err);
+function runCommand(cmd){
+let params={};
+if(cmd==='embed') params={canal:prompt('ID do canal'),titulo:prompt('Título'),descricao:prompt('Descrição'),cor:prompt('Cor HEX ex:#5865F2')};
+if(cmd==='sugerir') params={sugestao:prompt('Sugestão')};
+fetch('/api/command',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({command:cmd,params:params})})
+.then(r=>r.json()).then(r=>addLog('info','Comando '+cmd+' executado!')).catch(e=>addLog('error','Erro no comando '+cmd));
 }
 
-}
-
-async function removeRole() {
-const userId = document.getElementById('userSelect').value;
-const roleId = document.getElementById('roleSelect').value;
-try {
-    const res = await fetch('/api/remove-role', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ userId, roleId })
-    });
-    const data = await res.json();
-    addLog('info', data.message);
-} catch(err) {
-    addLog('error', 'Erro ao remover cargo: ' + err);
-}
-
-// -------------------- BOT --------------------
-function startBot() {
-document.getElementById('status').textContent = 'Online';
-addLog('info', 'Bot iniciado');
-populateDropdowns();
-}
-
-function stopBot() {
-document.getElementById('status').textContent = 'Offline';
-addLog('error', 'Bot parado');
-}
+function startBot(){document.getElementById('status').textContent='Online'; addLog('info','Bot iniciado');}
+function stopBot(){document.getElementById('status').textContent='Offline'; addLog('error','Bot parado');}
 
 // Inicializa
-addLog('info', 'Dashboard pronto');
+addLog('info','Dashboard pronto');
 populateDropdowns();
 </script>
+
 </body>
-</html>
+    </html>
