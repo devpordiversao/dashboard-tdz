@@ -16,17 +16,7 @@
         <section class="servers">
             <h2>Servidores do Bot</h2>
             <div class="server-cards">
-                <!-- Cards de servidores do bot aparecerão aqui -->
-                <div class="card">
-                    <h3>Servidor 1</h3>
-                    <button>Pausar Bot</button>
-                    <button>Ativar Bot</button>
-                </div>
-                <div class="card">
-                    <h3>Servidor 2</h3>
-                    <button>Pausar Bot</button>
-                    <button>Ativar Bot</button>
-                </div>
+                <!-- Cards preenchidos via JS -->
             </div>
         </section>
 
@@ -41,19 +31,46 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>/teste</td>
-                        <td>Rafa</td>
-                        <td>12/02/2026 22:42</td>
-                    </tr>
-                    <tr>
-                        <td>/divulgar</td>
-                        <td>Lucas</td>
-                        <td>12/02/2026 21:30</td>
-                    </tr>
+                    <!-- Preenchido via JS -->
                 </tbody>
             </table>
         </section>
     </main>
+
+    <script>
+    // Puxa servidores do bot
+    fetch('/api/servers')
+      .then(res => res.json())
+      .then(servers => {
+        const container = document.querySelector('.server-cards');
+        container.innerHTML = '';
+        servers.forEach(s => {
+          container.innerHTML += `
+            <div class="card">
+              <h3>${s.name}</h3>
+              <button>Pausar Bot</button>
+              <button>Ativar Bot</button>
+            </div>
+          `;
+        });
+      });
+
+    // Puxa comandos recentes
+    fetch('/api/commands')
+      .then(res => res.json())
+      .then(commands => {
+        const tbody = document.querySelector('table tbody');
+        tbody.innerHTML = '';
+        commands.forEach(c => {
+          tbody.innerHTML += `
+            <tr>
+              <td>${c.command}</td>
+              <td>${c.user}</td>
+              <td>${c.date}</td>
+            </tr>
+          `;
+        });
+      });
+    </script>
 </body>
 </html>
