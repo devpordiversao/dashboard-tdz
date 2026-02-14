@@ -5,232 +5,78 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TDZ Bot Dashboard</title>
 <style>
-/* --- Estilo base --- */
-* { margin:0; padding:0; box-sizing:border-box; }
-body { font-family:'Segoe UI', sans-serif; background:linear-gradient(135deg,#161620 0%,#1e1e2e 100%); color:#fff; min-height:100vh; }
-.navbar { background:#2a2a3e; padding:1.5rem 2rem; display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 10px rgba(0,0,0,0.3); }
-.navbar h1 { background: linear-gradient(135deg,#5865F2,#9B59B6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-.bot-status { display:flex; align-items:center; gap:15px; }
-.status-dot { width:12px; height:12px; border-radius:50%; background:#43B581; animation:pulse 2s infinite; }
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
-.container { max-width:1400px; margin:2rem auto; padding:0 2rem; }
-.card { background:#2a2a3e; border-radius:12px; padding:1.5rem; margin-bottom:2rem; box-shadow:0 4px 20px rgba(0,0,0,0.2); }
-.card-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; padding-bottom:1rem; border-bottom:2px solid rgba(255,255,255,0.1); }
-.grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:1.5rem; }
-.server-card { background:#161620; padding:1.5rem; border-radius:10px; border:2px solid rgba(255,255,255,0.1); cursor:pointer; transition:all 0.3s; }
-.server-card:hover { border-color:#5865F2; transform:translateY(-3px); }
-.server-card.active { border-color:#43B581; box-shadow:0 0 20px rgba(67,181,129,0.3); }
-.server-icon { width:60px; height:60px; border-radius:50%; background:linear-gradient(135deg,#5865F2,#9B59B6); display:flex; align-items:center; justify-content:center; font-size:1.8rem; margin-bottom:1rem; }
-.tabs { display:flex; gap:1rem; margin-bottom:1.5rem; border-bottom:2px solid rgba(255,255,255,0.1); flex-wrap:wrap; }
-.tab { padding:0.75rem 1.5rem; cursor:pointer; border-bottom:3px solid transparent; transition:all 0.3s; font-weight:600; }
-.tab:hover { color:#5865F2; }
-.tab.active { color:#5865F2; border-bottom-color:#5865F2; }
-.tab-content { display:none; animation:fadeIn 0.3s; }
-.tab-content.active { display:block; }
-@keyframes fadeIn { from{opacity:0} to{opacity:1} }
-.input-group { margin-bottom:1rem; }
-.input-group label { display:block; margin-bottom:0.5rem; color:#B9BBBE; }
-input,textarea,select { width:100%; padding:0.75rem; background:#161620; border:2px solid rgba(255,255,255,0.1); border-radius:8px; color:#fff; font-size:1rem; }
-input:focus,textarea:focus,select:focus { outline:none; border-color:#5865F2; }
-textarea { resize:vertical; min-height:100px; }
-.btn { padding:0.75rem 1.5rem; border:none; border-radius:8px; font-size:1rem; font-weight:600; cursor:pointer; transition:all 0.3s; margin-right:0.5rem; margin-bottom:0.5rem; }
-.btn-primary { background:linear-gradient(135deg,#5865F2,#7289DA); color:white; }
-.btn-primary:hover { transform:scale(1.05); box-shadow:0 5px 20px rgba(88,101,242,0.4); }
-.btn-success { background:#43B581; color:white; }
-.btn-danger { background:#F04747; color:white; }
-.btn-warning { background:#FAA61A; color:white; }
-.btn-secondary { background:#2a2a3e; color:#fff; border:2px solid rgba(255,255,255,0.2); }
-.logs { background:#000; border-radius:8px; padding:1rem; font-family:'Courier New',monospace; font-size:0.9rem; max-height:400px; overflow-y:auto; }
-.log-entry { padding:0.25rem 0; border-bottom:1px solid rgba(255,255,255,0.05); }
-.log-entry.error { color:#F04747; }
-.log-entry.warning { color:#FAA61A; }
-.log-entry.info { color:#43B581; }
-.command-item { background:#2a2a3e; padding:1rem; border-radius:8px; margin-bottom:0.5rem; border-left:3px solid #5865F2; display:flex; justify-content:space-between; align-items:center; }
-.badge { display:inline-block; padding:0.25rem 0.75rem; border-radius:12px; font-size:0.85rem; font-weight:600; background:#5865F2; }
-.quick-actions { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:1rem; }
-.quick-action { background:#161620; padding:1.5rem; border-radius:12px; text-align:center; cursor:pointer; transition:all 0.3s; border:2px solid transparent; }
-.quick-action:hover { border-color:#5865F2; transform:scale(1.05); }
-.notification { position:fixed; top:80px; right:20px; background:#2a2a3e; padding:1rem 1.5rem; border-radius:8px; box-shadow:0 4px 20px rgba(0,0,0,0.3); animation:slideIn 0.3s; z-index:9999; border-left:4px solid #43B581; }
-@keyframes slideIn { from{transform:translateX(400px); opacity:0} to{transform:translateX(0); opacity:1} }
-@media (max-width:768px){.navbar{flex-direction:column;gap:1rem}.container{padding:0 1rem}.grid{grid-template-columns:1fr}}
+body{font-family:sans-serif;background:#1e1e2e;color:#fff;padding:1rem}
+select,input,textarea,button{display:block;margin:0.5rem 0;padding:0.5rem;border-radius:5px;border:none;font-size:1rem;width:100%}
+button{cursor:pointer}
 </style>
 </head>
 <body>
-<div class="navbar">
-    <h1>🤖 TDZ Bot Dashboard</h1>
-    <div class="bot-status">
-        <div class="status-dot"></div>
-        <span>Bot Online</span>
-    </div>
-</div>
-<div class="container">
-    <!-- SERVIDORES -->
-    <div class="card">
-        <div class="card-header">
-            <h2>🌐 Servidores</h2>
-            <span class="badge" id="server-count">0 servidores</span>
-        </div>
-        <div class="grid" id="server-grid">
-            <!-- Cards de servidores serão preenchidos via JS -->
-        </div>
-    </div>
+<h1>TDZ Dashboard</h1>
 
-    <!-- FUNCIONALIDADES -->
-    <div class="card">
-        <div class="tabs">
-            <div class="tab active" data-tab="messages">📨 Mensagens</div>
-            <div class="tab" data-tab="channels">📁 Canais</div>
-            <div class="tab" data-tab="roles">🎭 Cargos</div>
-            <div class="tab" data-tab="commands">⚡ Comandos</div>
-        </div>
+<label>Servidor</label>
+<select id="serverSelect"></select>
 
-        <!-- MENSAGENS -->
-        <div class="tab-content active" id="messages">
-            <div class="input-group">
-                <label>📍 Canal</label>
-                <select id="msg-channel"></select>
-            </div>
-            <div class="input-group">
-                <label>💬 Mensagem</label>
-                <textarea id="msg-text" placeholder="Digite sua mensagem..."></textarea>
-            </div>
-            <button class="btn btn-primary" onclick="sendMessage()">📨 Enviar</button>
-        </div>
+<label>Canal</label>
+<select id="channelSelect"></select>
 
-        <!-- CANAIS -->
-        <div class="tab-content" id="channels">
-            <div class="quick-actions">
-                <div class="quick-action" onclick="createChannelPrompt()">➕ Criar Canal</div>
-                <div class="quick-action" onclick="renameChannelPrompt()">✏️ Renomear</div>
-                <div class="quick-action" onclick="deleteChannelPrompt()">🗑️ Deletar</div>
-            </div>
-        </div>
+<label>Mensagem</label>
+<textarea id="messageInput" placeholder="Digite sua mensagem"></textarea>
+<button onclick="sendMessage()">Enviar Mensagem</button>
 
-        <!-- CARGOS -->
-        <div class="tab-content" id="roles">
-            <div class="input-group">
-                <label>👤 Usuário</label>
-                <select id="role-user"></select>
-            </div>
-            <div class="input-group">
-                <label>🎭 Cargo</label>
-                <select id="role-select"></select>
-            </div>
-            <button class="btn btn-success" onclick="addRole()">➕ Dar Cargo</button>
-            <button class="btn btn-danger" onclick="removeRole()">➖ Remover</button>
-        </div>
+<hr>
 
-        <!-- COMANDOS -->
-        <div class="tab-content" id="commands">
-            <button class="btn btn-success">▶️ Iniciar Bot</button>
-            <button class="btn btn-warning">⏸️ Pausar</button>
-            <button class="btn btn-danger">⏹️ Parar</button>
-        </div>
-    </div>
+<label>Usuário</label>
+<select id="userSelect"></select>
 
-    <!-- LOGS -->
-    <div class="card">
-        <div class="card-header">
-            <h2>📋 Logs</h2>
-        </div>
-        <div class="logs" id="logs"></div>
-    </div>
-</div>
+<label>Cargo (ID)</label>
+<input id="roleInput" placeholder="Coloque o ID do cargo">
+<button onclick="setRole()">Dar Cargo</button>
 
 <script>
-// Tabs
-document.querySelectorAll('.tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        tab.classList.add('active');
-        document.getElementById(tab.dataset.tab).classList.add('active');
-    });
-});
-
-// API real
-async function loadServers() {
-    try {
-        const res = await fetch('/api/servers');
-        const data = await res.json();
-        const grid = document.getElementById('server-grid');
-        const serverCount = document.getElementById('server-count');
-        grid.innerHTML = '';
-        serverCount.textContent = `${data.guilds.length} servidores`;
-
-        data.guilds.forEach(g => {
-            const div = document.createElement('div');
-            div.className = 'server-card';
-            div.innerHTML = `<div class="server-icon">🎮</div><h3>${g.name}</h3><p style="color:#B9BBBE;">👥 ${g.memberCount}</p>`;
-            div.addEventListener('click', () => {
-                document.querySelectorAll('.server-card').forEach(c => c.classList.remove('active'));
-                div.classList.add('active');
-                loadChannels(g.id);
-                loadRoles(g.id);
-            });
-            grid.appendChild(div);
-        });
-    } catch(err) { console.error('Erro:', err); }
+// Carrega servidores, canais e membros
+async function loadServers(){
+    const res = await fetch('/api/servers');
+    const servers = await res.json();
+    const serverSelect = document.getElementById('serverSelect');
+    serverSelect.innerHTML='';
+    servers.forEach(s=>{const opt=document.createElement('option');opt.value=s.id;opt.textContent=s.name;serverSelect.appendChild(opt)});
+    loadChannels();
 }
-
-// Carrega canais reais
-async function loadChannels(guildId){
-    const sel = document.getElementById('msg-channel');
-    sel.innerHTML = '';
-    try {
-        const res = await fetch(`/api/${guildId}/channels`);
-        const data = await res.json();
-        data.channels.forEach(c => {
-            const opt = document.createElement('option');
-            opt.value = c.id;
-            opt.textContent = c.name;
-            sel.appendChild(opt);
-        });
-    } catch(err){ console.error(err); }
+async function loadChannels(){
+    const serverId=document.getElementById('serverSelect').value;
+    const res=await fetch(`/api/servers/${serverId}/channels`);
+    const channels=await res.json();
+    const channelSelect=document.getElementById('channelSelect');
+    channelSelect.innerHTML='';
+    channels.forEach(c=>{const opt=document.createElement('option');opt.value=c.id;opt.textContent=c.name;channelSelect.appendChild(opt)});
+    loadMembers();
 }
-
-// Carrega roles reais
-async function loadRoles(guildId){
-    const userSel = document.getElementById('role-user');
-    const roleSel = document.getElementById('role-select');
-    userSel.innerHTML = ''; roleSel.innerHTML = '';
-    try {
-        const res = await fetch(`/api/${guildId}/roles`);
-        const data = await res.json();
-        data.members.forEach(m => {
-            const opt = document.createElement('option');
-            opt.value = m.id;
-            opt.textContent = m.username;
-            userSel.appendChild(opt);
-        });
-        data.roles.forEach(r => {
-            const opt = document.createElement('option');
-            opt.value = r.id;
-            opt.textContent = r.name;
-            roleSel.appendChild(opt);
-        });
-    } catch(err){ console.error(err); }
+async function loadMembers(){
+    const serverId=document.getElementById('serverSelect').value;
+    const res=await fetch(`/api/servers/${serverId}/members`);
+    const members=await res.json();
+    const userSelect=document.getElementById('userSelect');
+    userSelect.innerHTML='';
+    members.forEach(u=>{const opt=document.createElement('option');opt.value=u.id;opt.textContent=u.tag;userSelect.appendChild(opt)});
 }
-
-// Enviar mensagem
-async function sendMessage(){
-    const channel = document.getElementById('msg-channel').value;
-    const text = document.getElementById('msg-text').value;
-    try{
-        const res = await fetch('/api/send-message',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({channelId:channel,text})});
-        const data = await res.json();
-        showNotification(data.message);
-    }catch(err){ console.error(err); }
-}
-
-// Notificação
-function showNotification(msg){
-    const notif = document.createElement('div'); notif.className='notification'; notif.textContent=msg; document.body.appendChild(notif);
-    setTimeout(()=>notif.remove(),3000);
-}
-
-// Inicializa
+document.getElementById('serverSelect').addEventListener('change',()=>{loadChannels()});
 loadServers();
+
+// Funções de ação
+async function sendMessage(){
+    const guildId=document.getElementById('serverSelect').value;
+    const channelId=document.getElementById('channelSelect').value;
+    const message=document.getElementById('messageInput').value;
+    await fetch('/api/send-message',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({guildId,channelId,message})});
+    alert('Mensagem enviada!');
+}
+async function setRole(){
+    const guildId=document.getElementById('serverSelect').value;
+    const userId=document.getElementById('userSelect').value;
+    const roleId=document.getElementById('roleInput').value;
+    await fetch('/api/set-role',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({guildId,userId,roleId})});
+    alert('Cargo adicionado!');
+}
 </script>
 </body>
 </html>
