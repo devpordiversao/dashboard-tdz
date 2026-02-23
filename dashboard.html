@@ -32,10 +32,10 @@ input, textarea, select{width:100%;padding:10px;margin:10px 0;background:#161620
 
 <div class="card">
 <div class="tabs">
-<div class="tab active" onclick="showTab('messages')">📨 Mensagens</div>
-<div class="tab" onclick="showTab('channels')">📁 Canais</div>
-<div class="tab" onclick="showTab('roles')">🎭 Cargos</div>
-<div class="tab" onclick="showTab('logs')">📝 Logs</div>
+    <div class="tab active" onclick="showTab('messages')">📨 Mensagens</div>
+    <div class="tab" onclick="showTab('channels')">📁 Canais</div>
+    <div class="tab" onclick="showTab('roles')">🎭 Cargos</div>
+    <div class="tab" onclick="showTab('logs')">📝 Logs</div>
 </div>
 
 <!-- Mensagens -->
@@ -66,8 +66,9 @@ input, textarea, select{width:100%;padding:10px;margin:10px 0;background:#161620
 <button class="btn btn-danger" onclick="removeRole()">➖ Remover</button>
 </div>
 
-<!-- Logs -->
+<!-- Logs de usuários -->
 <div class="tab-content" id="logs">
+<h3>📝 Logs Públicos de Mensagens</h3>
 <div class="logs" id="logsDisplay"></div>
 </div>
 
@@ -79,13 +80,7 @@ function showTab(tab){
     document.getElementById(tab).classList.add('active');
 }
 
-async function loadServers(){
-    const res = await fetch('/api/servers');
-    const sel = document.getElementById('serverSelect');
-    if(sel) sel.innerHTML='';
-    const servers = await res.json();
-}
-
+// Função para carregar logs do endpoint
 async function loadLogs(){
     const res = await fetch('/api/logs');
     const logs = await res.json();
@@ -93,19 +88,18 @@ async function loadLogs(){
     container.innerHTML='';
     logs.forEach(l=>{
         const div = document.createElement('div');
+        div.className = 'log-entry';
         div.textContent = `[${l.timestamp}] [${l.guild} - #${l.channel}] ${l.user}: ${l.content}`;
         container.appendChild(div);
     });
 }
-setInterval(loadLogs,2000);
 
-function sendMessage(){ /* Mesma função que você já tem */ }
-function createChannel(){ /* Mesma função que você já tem */ }
-function giveRole(){ /* Mesma função que você já tem */ }
-function removeRole(){ /* Mesma função que você já tem */ }
+// Atualiza logs a cada 2 segundos
+setInterval(loadLogs, 2000);
 
+// Inicializa status do bot
 document.getElementById('status').textContent='Online';
 </script>
 
 </body>
-  </html>
+</html>
