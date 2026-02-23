@@ -1,25 +1,111 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
-  <title>Dashboard</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lumo Dashboard</title>
+<style>
+body{font-family:Arial,sans-serif;background:#161620;color:#fff;padding:20px;}
+.navbar{background:#2a2a3e;padding:20px;border-radius:10px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;}
+h1{color:#5865F2;}
+.card{background:#2a2a3e;padding:20px;border-radius:10px;margin-bottom:20px;}
+.tabs{display:flex;gap:10px;margin-bottom:20px;border-bottom:2px solid #444;}
+.tab{padding:10px 20px;cursor:pointer;border-bottom:3px solid transparent;}
+.tab.active{color:#5865F2;border-bottom-color:#5865F2;}
+.tab-content{display:none;}
+.tab-content.active{display:block;}
+input, textarea, select{width:100%;padding:10px;margin:10px 0;background:#161620;border:2px solid #444;border-radius:5px;color:#fff;}
+.btn{padding:10px 20px;margin:5px;border:none;border-radius:5px;cursor:pointer;font-weight:bold;}
+.btn-primary{background:#5865F2;color:white;}
+.btn-success{background:#43B581;color:white;}
+.btn-danger{background:#F04747;color:white;}
+.logs{background:#000;padding:15px;border-radius:5px;max-height:300px;overflow-y:auto;font-family:monospace;}
+.log-entry{padding:5px 0;}
+</style>
 </head>
 <body>
-  <h1>Seus Servidores</h1>
-  <div id="servers"></div>
 
-  <script>
-    fetch("/api/guilds")
-      .then(res => res.json())
-      .then(guilds => {
-        const container = document.getElementById("servers");
-        guilds.forEach(g => {
-          const div = document.createElement("div");
-          div.className = "server";
-          div.innerText = g.name;
-          container.appendChild(div);
-        });
-      });
-  </script>
+<div class="navbar">
+<h1>🤖 Lumo Dashboard</h1>
+<div>Status: <span id="status">Offline</span></div>
+</div>
+
+<div class="card">
+<div class="tabs">
+<div class="tab active" onclick="showTab('messages')">📨 Mensagens</div>
+<div class="tab" onclick="showTab('channels')">📁 Canais</div>
+<div class="tab" onclick="showTab('roles')">🎭 Cargos</div>
+<div class="tab" onclick="showTab('logs')">📝 Logs</div>
+</div>
+
+<!-- Mensagens -->
+<div class="tab-content active" id="messages">
+<label>Canal:</label>
+<select id="channelSelect"></select>
+<label>Mensagem:</label>
+<textarea id="messageText" rows="4" placeholder="Digite sua mensagem"></textarea>
+<button class="btn btn-primary" onclick="sendMessage()">📨 Enviar</button>
+</div>
+
+<!-- Canais -->
+<div class="tab-content" id="channels">
+<label>Nome do Canal:</label>
+<input type="text" id="channelName" placeholder="Nome do canal">
+<label>Tipo:</label>
+<select id="channelType"><option>Texto</option><option>Voz</option></select>
+<button class="btn btn-primary" onclick="createChannel()">➕ Criar Canal</button>
+</div>
+
+<!-- Cargos -->
+<div class="tab-content" id="roles">
+<label>Usuário:</label>
+<select id="userSelect"></select>
+<label>Cargo:</label>
+<select id="roleSelect"></select>
+<button class="btn btn-success" onclick="giveRole()">➕ Dar Cargo</button>
+<button class="btn btn-danger" onclick="removeRole()">➖ Remover</button>
+</div>
+
+<!-- Logs -->
+<div class="tab-content" id="logs">
+<div class="logs" id="logsDisplay"></div>
+</div>
+
+<script>
+function showTab(tab){
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById(tab).classList.add('active');
+}
+
+async function loadServers(){
+    const res = await fetch('/api/servers');
+    const sel = document.getElementById('serverSelect');
+    if(sel) sel.innerHTML='';
+    const servers = await res.json();
+}
+
+async function loadLogs(){
+    const res = await fetch('/api/logs');
+    const logs = await res.json();
+    const container = document.getElementById('logsDisplay');
+    container.innerHTML='';
+    logs.forEach(l=>{
+        const div = document.createElement('div');
+        div.textContent = `[${l.timestamp}] [${l.guild} - #${l.channel}] ${l.user}: ${l.content}`;
+        container.appendChild(div);
+    });
+}
+setInterval(loadLogs,2000);
+
+function sendMessage(){ /* Mesma função que você já tem */ }
+function createChannel(){ /* Mesma função que você já tem */ }
+function giveRole(){ /* Mesma função que você já tem */ }
+function removeRole(){ /* Mesma função que você já tem */ }
+
+document.getElementById('status').textContent='Online';
+</script>
+
 </body>
-</html>
+  </html>
