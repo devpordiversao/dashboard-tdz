@@ -1,4 +1,3 @@
-// server.js
 const express = require('express');
 const { Client, GatewayIntentBits, SlashCommandBuilder } = require('discord.js');
 require('dotenv').config();
@@ -9,10 +8,10 @@ const PORT = process.env.PORT || 8080;
 app.use(express.json());
 app.use(express.static('public'));
 
-// Serve Dashboard
+// --- Dashboard ---
 app.get('/', (req, res) => res.sendFile(__dirname + '/public/index.html'));
 
-// --- Discord Bot ---
+// --- Bot Discord ---
 const bot = new Client({
     intents: [
         GatewayIntentBits.Guilds,
@@ -22,15 +21,17 @@ const bot = new Client({
     ]
 });
 
-// Logs de todos os canais (publicos e privados)
-const logs = [];
+// Logs em memória
+const logs = []; // armazena até 500 mensagens
 
 bot.once('ready', async () => {
-    console.log(`✅ Bot online: ${bot.user.tag}`);
+    console.log(`Bot online: ${bot.user.tag}`);
 
     try {
         await bot.application.commands.set([
-            new SlashCommandBuilder().setName('ping').setDescription('Teste do bot')
+            new SlashCommandBuilder()
+                .setName('ping')
+                .setDescription('Teste do bot')
         ]);
         console.log('✅ Comandos sincronizados!');
     } catch (e) {
@@ -38,11 +39,20 @@ bot.once('ready', async () => {
     }
 });
 
-bot.on('messageCreate', async (message) => {
-    if (message.author.bot) return; // ignora mensagens do bot
-    if (!message.guild) return;     // ignora DMs
+// Login do bot
+const token = process.env.BOT_TOKEN;
+if (!token) console.error('❌ BOT_TOKEN não encontrado no .env');
+else bot.login(token).catch(err => console.error('❌ Erro ao logar o bot:', err));
 
-    const logEntry = {
+// ============================================================
+// Captura todas as mensagens de texto
+// ============================================================
+bot.on('messageCreate', async (message) => {
+    if (message.author.bot) return; // ignora o próprio bot
+    if (!message.guild) return; // ignora DMs
+
+    // Armazena log
+    logs.push({
         id: Date.now().toString(),
         timestamp: new Date().toISOString(),
         guildId: message.guild.id,
@@ -52,65 +62,35 @@ bot.on('messageCreate', async (message) => {
         userId: message.author.id,
         userTag: message.author.tag,
         content: message.content || '',
-        attachments: message.attachments.map(a => ({ name: a.name, url: a.url })),
-        replied: false
-    };
+        attachments: message.attachments.map(a => ({ name: a.name, url: a.url }))
+    });
 
-    logs.push(logEntry);
-    if (logs.length > 500) logs.shift(); // mantém só 500 mensagens
+    if (logs.length > 500) logs.shift(); // mantém apenas 500 logs
 
-    console.log(`[LOG] ${message.guild.name} #${message.channel.name} ${message.author.tag}: ${message.content}`);
+    console.log(`[LOG] ${message.guild.name}#${message.channel.name} <${message.author.tag}>: ${message.content}`);
 });
 
-// --- Endpoints API ---
+// ============================================================
+// API — Logs
+// ============================================================
 
-// Logs
+// Buscar logs (opcional: filtrar por servidor)
 app.get('/api/logs', (req, res) => {
     const { guildId } = req.query;
-    let filtered = [...logs].reverse(); // mais recentes primeiro
-    if (guildId) filtered = filtered.filter(l => l.guildId === guildId);
-    res.json(filtered);
+    let result = [...logs].reverse(); // mais recentes primeiro
+    if (guildId) result = result.filter(l => l.guildId === guildId);
+    res.json(result);
 });
 
-// Responder via bot
-app.post('/api/reply', async (req, res) => {
-    const { channelId, message } = req.body;
-    if (!channelId || !message) return res.status(400).json({ error: 'channelId e message são obrigatórios' });
-
-    try {
-        const channel = await bot.channels.fetch(channelId);
-        if (!channel) return res.status(404).json({ error: 'Canal não encontrado' });
-
-        await channel.send(message);
-        logs.forEach(log => {
-            if (log.channelId === channelId && !log.replied) log.replied = true;
-        });
-
-        res.json({ success: true, channelId, message });
-    } catch (err) {
-        console.error('Erro ao responder no canal:', err);
-        res.status(500).json({ error: err.message });
-    }
+// Limpar logs
+app.delete('/api/logs', (req, res) => {
+    logs.length = 0;
+    res.json({ success: true });
 });
 
-// Enviar DM
-app.post('/api/send-dm', async (req, res) => {
-    const { guildId, userId, message } = req.body;
-    if (!userId || !message) return res.status(400).json({ error: 'userId e message são obrigatórios' });
-
-    try {
-        const member = await bot.guilds.cache.get(guildId)?.members.fetch(userId);
-        if (!member) return res.status(404).json({ error: 'Usuário não encontrado' });
-
-        await member.send(message);
-        res.json({ success: true, userId, message });
-    } catch (err) {
-        console.error('Erro ao enviar DM:', err);
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// Servidores
+// ============================================================
+// API — Servidores, Canais, Membros, Cargos
+// ============================================================
 app.get('/api/servers', (req, res) => {
     const guilds = bot.guilds.cache.map(g => ({
         id: g.id,
@@ -121,15 +101,15 @@ app.get('/api/servers', (req, res) => {
     res.json(guilds);
 });
 
-// Canais
 app.get('/api/servers/:guildId/channels', (req, res) => {
     const guild = bot.guilds.cache.get(req.params.guildId);
     if (!guild) return res.json([]);
-    const channels = guild.channels.cache.map(c => ({ id: c.id, name: c.name }));
+    const channels = guild.channels.cache
+        .filter(c => c.type === 0) // apenas texto
+        .map(c => ({ id: c.id, name: c.name }));
     res.json(channels);
 });
 
-// Membros
 app.get('/api/servers/:guildId/members', async (req, res) => {
     const guild = bot.guilds.cache.get(req.params.guildId);
     if (!guild) return res.json([]);
@@ -137,7 +117,6 @@ app.get('/api/servers/:guildId/members', async (req, res) => {
     res.json(members.map(m => ({ id: m.user.id, tag: m.user.tag })));
 });
 
-// Cargos
 app.get('/api/servers/:guildId/roles', async (req, res) => {
     const guild = bot.guilds.cache.get(req.params.guildId);
     if (!guild) return res.json([]);
@@ -150,9 +129,7 @@ app.post('/api/create-channel', async (req, res) => {
     const { guildId, name, type } = req.body;
     const guild = bot.guilds.cache.get(guildId);
     if (!guild) return res.status(400).send('Servidor não encontrado');
-
     const channelType = type.toLowerCase() === 'texto' ? 0 : 2;
-
     try {
         const channel = await guild.channels.create({ name, type: channelType });
         res.json({ id: channel.id, name: channel.name });
@@ -167,7 +144,6 @@ app.post('/api/set-role', async (req, res) => {
     const { guildId, userId, roleId } = req.body;
     const guild = bot.guilds.cache.get(guildId);
     if (!guild) return res.status(400).send('Servidor não encontrado');
-
     try {
         const member = await guild.members.fetch(userId);
         const role = await guild.roles.fetch(roleId);
@@ -181,7 +157,6 @@ app.post('/api/remove-role', async (req, res) => {
     const { guildId, userId, roleId } = req.body;
     const guild = bot.guilds.cache.get(guildId);
     if (!guild) return res.status(400).send('Servidor não encontrado');
-
     try {
         const member = await guild.members.fetch(userId);
         const role = await guild.roles.fetch(roleId);
@@ -190,22 +165,30 @@ app.post('/api/remove-role', async (req, res) => {
     } catch (err) { console.error(err); res.status(500).send(err.message); }
 });
 
-// Enviar mensagem em canal
+// Enviar mensagem
 app.post('/api/send-message', async (req, res) => {
     const { guildId, channelId, message } = req.body;
     const guild = bot.guilds.cache.get(guildId);
     if (!guild) return res.status(400).send('Servidor não encontrado');
-
     const channel = guild.channels.cache.get(channelId);
     if (!channel) return res.status(400).send('Canal não encontrado');
-
     try {
         await channel.send(message);
         res.json({ channelId, message });
     } catch (err) { console.error(err); res.status(500).send(err.message); }
 });
 
-// Start server
-app.listen(PORT, () => console.log(`✅ Servidor rodando na porta ${PORT}`));
+// Enviar DM
+app.post('/api/send-dm', async (req, res) => {
+    const { guildId, userId, message } = req.body;
+    const guild = bot.guilds.cache.get(guildId);
+    if (!guild) return res.status(400).send('Servidor não encontrado');
+    try {
+        const member = await guild.members.fetch(userId);
+        await member.send(message);
+        res.json({ userId, message });
+    } catch (err) { console.error(err); res.status(500).send(err.message); }
+});
 
-bot.login(process.env.BOT_TOKEN).catch(err => console.error('❌ Erro ao logar o bot:', err));
+// Inicia servidor web
+app.listen(PORT, () => console.log(`✅ Servidor rodando na porta ${PORT}`));
