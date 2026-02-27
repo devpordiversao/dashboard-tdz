@@ -18,6 +18,7 @@
             --neon-pink: #ff00ff;
             --neon-purple: #bc13fe;
             --neon-green: #0aff00;
+            --neon-red: #ff003c;
             --dark-bg: #050508;
             --panel-bg: rgba(10, 10, 15, 0.9);
         }
@@ -407,11 +408,35 @@
             text-transform: uppercase;
             cursor: pointer;
             transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .btn-send:hover {
             transform: translateY(-2px);
             box-shadow: 0 10px 30px rgba(0, 243, 255, 0.3);
+        }
+
+        .btn-send:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-send.loading::after {
+            content: '';
+            width: 16px;
+            height: 16px;
+            border: 2px solid #000;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
         /* Command Buttons */
@@ -492,10 +517,19 @@
             transform: translateX(400px);
             transition: transform 0.3s;
             z-index: 1001;
+            max-width: 350px;
         }
 
         .toast.show {
             transform: translateX(0);
+        }
+
+        .toast.success {
+            border-left: 4px solid var(--neon-green);
+        }
+
+        .toast.error {
+            border-left: 4px solid var(--neon-red);
         }
 
         /* Mobile */
@@ -706,17 +740,17 @@
                         <form onsubmit="sendMessage(event)">
                             <div class="form-group">
                                 <label class="form-label">Canal</label>
-                                <select class="form-select">
-                                    <option>#geral</option>
-                                    <option>#anúncios</option>
-                                    <option>#vip</option>
+                                <select class="form-select" name="canal">
+                                    <option value="geral">#geral</option>
+                                    <option value="anuncios">#anúncios</option>
+                                    <option value="vip">#vip</option>
                                 </select>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Mensagem</label>
-                                <textarea class="form-textarea" placeholder="Digite sua mensagem..."></textarea>
+                                <textarea class="form-textarea" name="mensagem" placeholder="Digite sua mensagem..."></textarea>
                             </div>
-                            <button type="submit" class="btn-send">
+                            <button type="submit" class="btn-send" id="btn-send-msg">
                                 <i class="fas fa-paper-plane"></i> Enviar
                             </button>
                         </form>
@@ -729,13 +763,13 @@
                         <form onsubmit="sendDM(event)">
                             <div class="form-group">
                                 <label class="form-label">ID do Usuário</label>
-                                <input type="text" class="form-input" placeholder="123456789...">
+                                <input type="text" class="form-input" name="userId" placeholder="123456789...">
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Mensagem</label>
-                                <textarea class="form-textarea" placeholder="Mensagem privada..."></textarea>
+                                <textarea class="form-textarea" name="mensagem" placeholder="Mensagem privada..."></textarea>
                             </div>
-                            <button type="submit" class="btn-send" style="background: linear-gradient(135deg, var(--neon-pink), var(--neon-purple));">
+                            <button type="submit" class="btn-send" id="btn-send-dm" style="background: linear-gradient(135deg, var(--neon-pink), var(--neon-purple));">
                                 <i class="fas fa-envelope"></i> Enviar DM
                             </button>
                         </form>
@@ -820,15 +854,10 @@
 
     <script>
         function showSection(section) {
-            // Hide all sections
             document.querySelectorAll('.content-section').forEach(s => {
                 s.classList.add('hidden');
             });
-            
-            // Show selected
             document.getElementById(section + '-section').classList.remove('hidden');
-            
-            // Update nav
             document.querySelectorAll('.nav-link').forEach(l => {
                 l.classList.remove('active');
             });
@@ -839,29 +868,125 @@
             document.getElementById('sidebar').classList.toggle('mobile-open');
         }
 
-        function showToast(message) {
+        function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
-            document.getElementById('toast-message').textContent = message;
+            const msg = document.getElementById('toast-message');
+            const icon = toast.querySelector('i');
+            
+            toast.className = 'toast ' + type;
+            msg.textContent = message;
+            
+            icon.className = type === 'success' ? 'fas fa-check-circle' : 
+                            type === 'error' ? 'fas fa-exclamation-circle' : 
+                            'fas fa-info-circle';
+            
             toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 3000);
+            setTimeout(() => toast.classList.remove('show'), 4000);
         }
 
-        function sendMessage(e) {
+        // Send message to channel
+        async function sendMessage(e) {
             e.preventDefault();
-            showToast('Mensagem enviada!');
+
+            const btn = document.getElementById('btn-send-msg');
+            btn.classList.add('loading');
+            btn.disabled = true;
+
+            const canal = e.target.querySelector("select").value;
+            const mensagem = e.target.querySelector("textarea").value;
+
+            try {
+                const res = await fetch("/send-message", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ canal, mensagem })
+                });
+
+                const data = await res.json();
+
+                if (data.ok) {
+                    showToast("Mensagem enviada pro Discord!", "success");
+                    addLog("MESSAGE", `Sent to #${canal}: ${mensagem.substring(0, 30)}...`);
+                } else {
+                    showToast("Erro ao enviar: " + (data.error || "Unknown error"), "error");
+                }
+            } catch (err) {
+                showToast("Erro de conexão com o servidor!", "error");
+                console.error(err);
+            } finally {
+                btn.classList.remove('loading');
+                btn.disabled = false;
+            }
+
             e.target.reset();
         }
 
-        function sendDM(e) {
+        // Send DM to user
+        async function sendDM(e) {
             e.preventDefault();
-            showToast('DM enviada!');
+
+            const btn = document.getElementById('btn-send-dm');
+            btn.classList.add('loading');
+            btn.disabled = true;
+
+            const userId = e.target.querySelector("input").value;
+            const mensagem = e.target.querySelector("textarea").value;
+
+            try {
+                const res = await fetch("/send-dm", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ userId, mensagem })
+                });
+
+                const data = await res.json();
+
+                if (data.ok) {
+                    showToast("DM enviada com sucesso!", "success");
+                    addLog("DM", `Sent to user ${userId}`);
+                } else {
+                    showToast("Erro ao enviar DM: " + (data.error || "Unknown error"), "error");
+                }
+            } catch (err) {
+                showToast("Erro de conexão com o servidor!", "error");
+                console.error(err);
+            } finally {
+                btn.classList.remove('loading');
+                btn.disabled = false;
+            }
+
             e.target.reset();
+        }
+
+        function addLog(type, message) {
+            const logs = document.getElementById('logs-container');
+            const time = new Date().toLocaleTimeString('pt-BR');
+            const colors = {
+                'MESSAGE': 'var(--neon-green)',
+                'DM': 'var(--neon-pink)',
+                'COMMAND': 'var(--neon-yellow)',
+                'SYSTEM': 'var(--neon-cyan)'
+            };
+            
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.innerHTML = `
+                <span class="log-time">${time}</span>
+                <span class="log-type" style="color: ${colors[type] || 'var(--neon-cyan)'};">[${type}]</span>
+                <span class="log-msg">${message}</span>
+            `;
+            
+            logs.insertBefore(entry, logs.firstChild);
         }
 
         function clearLogs() {
             document.getElementById('logs-container').innerHTML = '';
-            showToast('Logs limpos!');
+            showToast('Logs limpos!', 'success');
         }
     </script>
 </body>
-                        </html>
+                                </html>
