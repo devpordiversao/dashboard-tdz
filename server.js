@@ -82,8 +82,29 @@ app.post("/send-dm", async (req, res) => {
 });
 
 // ---------------- PORTA (RAILWAY) ----------------
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
+app.get('/canais', async (req, res) => {
+    try {
+        const guild = client.guilds.cache.first();
+        
+        if (!guild) {
+            return res.json([]);
+        }
 
+        const canais = guild.channels.cache
+            .filter(c => c.isTextBased && c.isTextBased())
+            .map(c => ({
+                id: c.id,
+                nome: c.name
+            }));
+
+        res.json(canais);
+
+    } catch (err) {
+        console.error(err);
+        res.json([]);
+    }
+});
 app.listen(PORT, () => {
     console.log(`🌐 Dashboard rodando na porta ${PORT}`);
 });
