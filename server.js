@@ -2,10 +2,11 @@ require("dotenv").config();
 
 const express = require("express");
 const path = require("path");
-const { Client, GatewayIntentBits } = require("discord.js");
+const { Client, GatewayIntentBits, Partials } = require("discord.js");
 
 const app = express();
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // ---------------- DISCORD BOT ----------------
 const client = new Client({
@@ -14,56 +15,75 @@ const client = new Client({
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.MessageContent,
         GatewayIntentBits.DirectMessages
-    ]
+    ],
+    partials: [Partials.Channel] // necessário pra DM
 });
 
 client.once("ready", () => {
-    console.log(`🤖 Bot conectado como ${client.user.tag}`);
+    console.log(`🤖 Bot online: ${client.user.tag}`);
 });
 
 client.login(process.env.DISCORD_TOKEN);
 
 // ---------------- SERVIR HTML ----------------
+app.use(express.static(path.join(__dirname))); 
+// garante que o dashboard.html abre direto
+
 app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "dashboard.html")); // nome do teu HTML
+    res.sendFile(path.join(__dirname, "dashboard.html"));
 });
 
-// ---------------- ENVIAR MENSAGEM NO CANAL ----------------
+// ---------------- ENVIAR MENSAGEM ----------------
 app.post("/send-message", async (req, res) => {
     try {
-        const { channelId, message } = req.body;
+        const { canal, mensagem } = req.body;
 
-        const channel = await client.channels.fetch(channelId);
-        if (!channel) return res.json({ success: false });
+        if (!canal || !mensagem) {
+            return res.json({ success: false, error: "Dados inválidos" });
+        }
 
-        await channel.send(message);
+        const channel = await client.channels.fetch(canal);
+
+        if (!channel) {
+            return res.json({ success: false, error: "Canal não encontrado" });
+        }
+
+        await channel.send(mensagem);
+
+        console.log("📨 Mensagem enviada:", mensagem);
 
         res.json({ success: true });
     } catch (err) {
-        console.error(err);
-        res.json({ success: false });
+        console.error("Erro ao enviar mensagem:", err);
+        res.json({ success: false, error: "Erro interno" });
     }
 });
 
 // ---------------- ENVIAR DM ----------------
 app.post("/send-dm", async (req, res) => {
     try {
-        const { userId, message } = req.body;
+        const { userId, mensagem } = req.body;
+
+        if (!userId || !mensagem) {
+            return res.json({ success: false });
+        }
 
         const user = await client.users.fetch(userId);
-        if (!user) return res.json({ success: false });
 
-        await user.send(message);
+        await user.send(mensagem);
+
+        console.log("📩 DM enviada para:", userId);
 
         res.json({ success: true });
     } catch (err) {
-        console.error(err);
+        console.error("Erro DM:", err);
         res.json({ success: false });
     }
 });
 
-// ---------------- START SERVER ----------------
-const PORT = 3000;
+// ---------------- PORTA (RAILWAY) ----------------
+const PORT = process.env.PORT || 3000;
+
 app.listen(PORT, () => {
-    console.log(`🌐 Dashboard rodando em http://localhost:${PORT}`);
+    console.log(`🌐 Dashboard rodando na porta ${PORT}`);
 });
