@@ -741,9 +741,7 @@
                             <div class="form-group">
                                 <label class="form-label">Canal</label>
                                 <select class="form-select" name="canal">
-                                    <option value="geral">#geral</option>
-                                    <option value="anuncios">#anúncios</option>
-                                    <option value="vip">#vip</option>
+                                    <option value="">Carregando canais...</option>
                                 </select>
                             </div>
                             <div class="form-group">
@@ -987,6 +985,53 @@
             document.getElementById('logs-container').innerHTML = '';
             showToast('Logs limpos!', 'success');
         }
+
+        // ============================================
+        // NOVA FUNÇÃO: Carregar canais do backend
+        // ============================================
+        async function carregarCanais() {
+            try {
+                const res = await fetch("/canais");
+                
+                if (!res.ok) {
+                    throw new Error('Falha ao carregar canais');
+                }
+                
+                const canais = await res.json();
+                
+                const select = document.querySelector("select[name='canal']");
+                if (!select) return;
+                
+                // Limpar opções existentes
+                select.innerHTML = "";
+                
+                // Adicionar canais do backend
+                canais.forEach(c => {
+                    const opt = document.createElement("option");
+                    opt.value = c.id;
+                    opt.textContent = "#" + c.nome;
+                    select.appendChild(opt);
+                });
+                
+                showToast(`${canais.length} canais carregados!`, 'success');
+                
+            } catch (err) {
+                console.error('Erro ao carregar canais:', err);
+                showToast('Erro ao carregar canais do servidor', 'error');
+                
+                // Manter opção padrão em caso de erro
+                const select = document.querySelector("select[name='canal']");
+                if (select) {
+                    select.innerHTML = '<option value="">Erro ao carregar</option>';
+                }
+            }
+        }
+
+        // Carregar canais quando a página iniciar
+        carregarCanais();
+        
+        // Recarregar canais ao clicar na seção de mensagens
+        document.querySelector('a[onclick="showSection(\'messages\')"]').addEventListener('click', carregarCanais);
     </script>
 </body>
                                 </html>
