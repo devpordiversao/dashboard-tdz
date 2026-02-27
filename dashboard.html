@@ -1,105 +1,867 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lumo Dashboard</title>
-<style>
-body{font-family:Arial,sans-serif;background:#161620;color:#fff;padding:20px;}
-.navbar{background:#2a2a3e;padding:20px;border-radius:10px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;}
-h1{color:#5865F2;}
-.card{background:#2a2a3e;padding:20px;border-radius:10px;margin-bottom:20px;}
-.tabs{display:flex;gap:10px;margin-bottom:20px;border-bottom:2px solid #444;}
-.tab{padding:10px 20px;cursor:pointer;border-bottom:3px solid transparent;}
-.tab.active{color:#5865F2;border-bottom-color:#5865F2;}
-.tab-content{display:none;}
-.tab-content.active{display:block;}
-input, textarea, select{width:100%;padding:10px;margin:10px 0;background:#161620;border:2px solid #444;border-radius:5px;color:#fff;}
-.btn{padding:10px 20px;margin:5px;border:none;border-radius:5px;cursor:pointer;font-weight:bold;}
-.btn-primary{background:#5865F2;color:white;}
-.btn-success{background:#43B581;color:white;}
-.btn-danger{background:#F04747;color:white;}
-.logs{background:#000;padding:15px;border-radius:5px;max-height:300px;overflow-y:auto;font-family:monospace;}
-.log-entry{padding:5px 0;}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TDZ Bot | Dashboard Neon</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --neon-cyan: #00f3ff;
+            --neon-pink: #ff00ff;
+            --neon-purple: #bc13fe;
+            --neon-green: #0aff00;
+            --dark-bg: #050508;
+            --panel-bg: rgba(10, 10, 15, 0.9);
+        }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: var(--dark-bg);
+            color: #fff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Background Effects */
+        .shader-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            background: 
+                radial-gradient(ellipse at 20% 80%, rgba(188, 19, 254, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(0, 243, 255, 0.15) 0%, transparent 50%),
+                #050508;
+        }
+
+        .grid-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background-image: 
+                linear-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1000;
+            pointer-events: none;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.1),
+                rgba(0, 0, 0, 0.1) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            opacity: 0.3;
+        }
+
+        /* Layout */
+        .dashboard {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: var(--panel-bg);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(0, 243, 255, 0.1);
+            padding: 30px 20px;
+            position: relative;
+        }
+
+        .sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--neon-cyan), transparent);
+            animation: scan 3s linear infinite;
+        }
+
+        @keyframes scan {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .logo-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 15px;
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            box-shadow: 0 0 30px rgba(0, 243, 255, 0.3);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 30px rgba(0, 243, 255, 0.3); }
+            50% { box-shadow: 0 0 50px rgba(0, 243, 255, 0.6); }
+        }
+
+        .logo h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 24px;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo span {
+            font-size: 12px;
+            color: var(--neon-green);
+            letter-spacing: 3px;
+        }
+
+        .nav-menu {
+            list-style: none;
+        }
+
+        .nav-item {
+            margin-bottom: 10px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 20px;
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            border-radius: 12px;
+            transition: all 0.3s;
+            border: 1px solid transparent;
+            cursor: pointer;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background: rgba(0, 243, 255, 0.1);
+            border-color: rgba(0, 243, 255, 0.3);
+            color: var(--neon-cyan);
+        }
+
+        .nav-link i {
+            font-size: 20px;
+            width: 30px;
+            text-align: center;
+        }
+
+        .bot-status {
+            margin-top: 40px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            border: 1px solid rgba(10, 255, 0, 0.2);
+        }
+
+        .status-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            background: var(--neon-green);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--neon-green);
+            animation: blink 2s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .status-text {
+            font-size: 14px;
+            color: var(--neon-green);
+            font-weight: 600;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(0, 243, 255, 0.1);
+        }
+
+        .page-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 32px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .btn-neon {
+            padding: 12px 24px;
+            background: transparent;
+            border: 2px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+            border-radius: 8px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-neon:hover {
+            background: rgba(0, 243, 255, 0.1);
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.3);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 243, 255, 0.1);
+            border-radius: 20px;
+            padding: 25px;
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(0, 243, 255, 0.3);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+
+        .stat-icon.cyan {
+            background: rgba(0, 243, 255, 0.1);
+            color: var(--neon-cyan);
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.2);
+        }
+
+        .stat-icon.pink {
+            background: rgba(255, 0, 255, 0.1);
+            color: var(--neon-pink);
+        }
+
+        .stat-icon.purple {
+            background: rgba(188, 19, 254, 0.1);
+            color: var(--neon-purple);
+        }
+
+        .stat-icon.green {
+            background: rgba(10, 255, 0, 0.1);
+            color: var(--neon-green);
+        }
+
+        .stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+
+        /* Panels */
+        .panel-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+
+        .panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 243, 255, 0.1);
+            border-radius: 20px;
+            padding: 25px;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(0, 243, 255, 0.1);
+        }
+
+        .panel-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .panel-title i {
+            color: var(--neon-cyan);
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.7);
+            text-transform: uppercase;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 14px 18px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(0, 243, 255, 0.2);
+            border-radius: 10px;
+            color: #fff;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 15px;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: var(--neon-cyan);
+        }
+
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .btn-send {
+            padding: 14px 28px;
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+            border: none;
+            border-radius: 10px;
+            color: #000;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 13px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-send:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 243, 255, 0.3);
+        }
+
+        /* Command Buttons */
+        .command-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .cmd-btn {
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(0, 243, 255, 0.1);
+            border-radius: 12px;
+            color: rgba(255, 255, 255, 0.8);
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .cmd-btn:hover {
+            background: rgba(0, 243, 255, 0.1);
+            border-color: var(--neon-cyan);
+            color: var(--neon-cyan);
+            transform: translateY(-3px);
+        }
+
+        .cmd-btn i {
+            font-size: 28px;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        /* Logs */
+        .log-container {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 12px;
+            padding: 15px;
+            height: 250px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+
+        .log-entry {
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            gap: 15px;
+        }
+
+        .log-time {
+            color: var(--neon-cyan);
+            min-width: 80px;
+        }
+
+        .log-type {
+            color: var(--neon-purple);
+            min-width: 100px;
+        }
+
+        .log-msg {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--panel-bg);
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            padding: 15px 20px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transform: translateX(400px);
+            transition: transform 0.3s;
+            z-index: 1001;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        /* Mobile */
+        @media (max-width: 1024px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 280px;
+                height: 100vh;
+                z-index: 999;
+            }
+
+            .sidebar.mobile-open {
+                display: block;
+            }
+
+            .panel-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .mobile-menu-btn {
+                display: flex !important;
+            }
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+            border-radius: 50%;
+            border: none;
+            color: #000;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 5px 20px rgba(0, 243, 255, 0.4);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
 </head>
 <body>
+    <div class="shader-bg"></div>
+    <div class="grid-overlay"></div>
+    <div class="scanlines"></div>
 
-<div class="navbar">
-<h1>🤖 Lumo Dashboard</h1>
-<div>Status: <span id="status">Offline</span></div>
-</div>
+    <div class="dashboard">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <h1>TDZ BOT</h1>
+                <span>Dashboard v2.0</span>
+            </div>
 
-<div class="card">
-<div class="tabs">
-    <div class="tab active" onclick="showTab('messages')">📨 Mensagens</div>
-    <div class="tab" onclick="showTab('channels')">📁 Canais</div>
-    <div class="tab" onclick="showTab('roles')">🎭 Cargos</div>
-    <div class="tab" onclick="showTab('logs')">📝 Logs</div>
-</div>
+            <nav>
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a class="nav-link active" onclick="showSection('dashboard')">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" onclick="showSection('messages')">
+                            <i class="fas fa-paper-plane"></i>
+                            <span>Mensagens</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" onclick="showSection('commands')">
+                            <i class="fas fa-terminal"></i>
+                            <span>Comandos</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" onclick="showSection('logs')">
+                            <i class="fas fa-history"></i>
+                            <span>Logs</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
 
-<!-- Mensagens -->
-<div class="tab-content active" id="messages">
-<label>Canal:</label>
-<select id="channelSelect"></select>
-<label>Mensagem:</label>
-<textarea id="messageText" rows="4" placeholder="Digite sua mensagem"></textarea>
-<button class="btn btn-primary" onclick="sendMessage()">📨 Enviar</button>
-</div>
+            <div class="bot-status">
+                <div class="status-header">
+                    <div class="status-dot"></div>
+                    <span class="status-text">BOT ONLINE</span>
+                </div>
+                <div style="font-size: 12px; color: rgba(255,255,255,0.6);">
+                    <div>Ping: 24ms</div>
+                    <div>Users: 1.2k</div>
+                </div>
+            </div>
+        </aside>
 
-<!-- Canais -->
-<div class="tab-content" id="channels">
-<label>Nome do Canal:</label>
-<input type="text" id="channelName" placeholder="Nome do canal">
-<label>Tipo:</label>
-<select id="channelType"><option>Texto</option><option>Voz</option></select>
-<button class="btn btn-primary" onclick="createChannel()">➕ Criar Canal</button>
-</div>
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard Section -->
+            <section id="dashboard-section" class="content-section">
+                <div class="header">
+                    <h2 class="page-title">Dashboard</h2>
+                    <button class="btn-neon" onclick="showToast('Dados atualizados!')">
+                        <i class="fas fa-sync-alt"></i> Atualizar
+                    </button>
+                </div>
 
-<!-- Cargos -->
-<div class="tab-content" id="roles">
-<label>Usuário:</label>
-<select id="userSelect"></select>
-<label>Cargo:</label>
-<select id="roleSelect"></select>
-<button class="btn btn-success" onclick="giveRole()">➕ Dar Cargo</button>
-<button class="btn btn-danger" onclick="removeRole()">➖ Remover</button>
-</div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon cyan"><i class="fas fa-paper-plane"></i></div>
+                        <div class="stat-value">12,847</div>
+                        <div class="stat-label">Mensagens</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon pink"><i class="fas fa-hashtag"></i></div>
+                        <div class="stat-value">42</div>
+                        <div class="stat-label">Canais</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon purple"><i class="fas fa-shield-alt"></i></div>
+                        <div class="stat-value">18</div>
+                        <div class="stat-label">Cargos</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon green"><i class="fas fa-terminal"></i></div>
+                        <div class="stat-value">1,456</div>
+                        <div class="stat-label">Comandos</div>
+                    </div>
+                </div>
 
-<!-- Logs de usuários -->
-<div class="tab-content" id="logs">
-<h3>📝 Logs Públicos de Mensagens</h3>
-<div class="logs" id="logsDisplay"></div>
-</div>
+                <div class="panel-grid">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3 class="panel-title"><i class="fas fa-bolt"></i> Ações Rápidas</h3>
+                        </div>
+                        <div class="command-grid">
+                            <button class="cmd-btn" onclick="showToast('Manutenção ativada!')">
+                                <i class="fas fa-wrench"></i>
+                                <span>Manutenção</span>
+                            </button>
+                            <button class="cmd-btn" onclick="showToast('Backup iniciado!')">
+                                <i class="fas fa-database"></i>
+                                <span>Backup</span>
+                            </button>
+                            <button class="cmd-btn" onclick="showToast('Cache limpo!')">
+                                <i class="fas fa-broom"></i>
+                                <span>Limpar Cache</span>
+                            </button>
+                            <button class="cmd-btn" onclick="showToast('Anúncio enviado!')">
+                                <i class="fas fa-bullhorn"></i>
+                                <span>Anúncio</span>
+                            </button>
+                        </div>
+                    </div>
 
-<script>
-function showTab(tab){
-    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
-    event.target.classList.add('active');
-    document.getElementById(tab).classList.add('active');
-}
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3 class="panel-title"><i class="fas fa-clock"></i> Logs Recentes</h3>
+                        </div>
+                        <div class="log-container">
+                            <div class="log-entry">
+                                <span class="log-time">14:32:05</span>
+                                <span class="log-type">[MESSAGE]</span>
+                                <span class="log-msg">Broadcast enviado</span>
+                            </div>
+                            <div class="log-entry">
+                                <span class="log-time">14:28:12</span>
+                                <span class="log-type">[COMMAND]</span>
+                                <span class="log-msg">/ban executado</span>
+                            </div>
+                            <div class="log-entry">
+                                <span class="log-time">14:15:33</span>
+                                <span class="log-type">[SYSTEM]</span>
+                                <span class="log-msg">Backup concluído</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
-// Função para carregar logs do endpoint
-async function loadLogs(){
-    const res = await fetch('/api/logs');
-    const logs = await res.json();
-    const container = document.getElementById('logsDisplay');
-    container.innerHTML='';
-    logs.forEach(l=>{
-        const div = document.createElement('div');
-        div.className = 'log-entry';
-        div.textContent = `[${l.timestamp}] [${l.guild} - #${l.channel}] ${l.user}: ${l.content}`;
-        container.appendChild(div);
-    });
-}
+            <!-- Messages Section -->
+            <section id="messages-section" class="content-section hidden">
+                <div class="header">
+                    <h2 class="page-title">Mensagens</h2>
+                </div>
 
-// Atualiza logs a cada 2 segundos
-setInterval(loadLogs, 2000);
+                <div class="panel-grid">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3 class="panel-title"><i class="fas fa-paper-plane"></i> Enviar para Canal</h3>
+                        </div>
+                        <form onsubmit="sendMessage(event)">
+                            <div class="form-group">
+                                <label class="form-label">Canal</label>
+                                <select class="form-select">
+                                    <option>#geral</option>
+                                    <option>#anúncios</option>
+                                    <option>#vip</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Mensagem</label>
+                                <textarea class="form-textarea" placeholder="Digite sua mensagem..."></textarea>
+                            </div>
+                            <button type="submit" class="btn-send">
+                                <i class="fas fa-paper-plane"></i> Enviar
+                            </button>
+                        </form>
+                    </div>
 
-// Inicializa status do bot
-document.getElementById('status').textContent='Online';
-</script>
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3 class="panel-title"><i class="fas fa-envelope"></i> DM para Usuário</h3>
+                        </div>
+                        <form onsubmit="sendDM(event)">
+                            <div class="form-group">
+                                <label class="form-label">ID do Usuário</label>
+                                <input type="text" class="form-input" placeholder="123456789...">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Mensagem</label>
+                                <textarea class="form-textarea" placeholder="Mensagem privada..."></textarea>
+                            </div>
+                            <button type="submit" class="btn-send" style="background: linear-gradient(135deg, var(--neon-pink), var(--neon-purple));">
+                                <i class="fas fa-envelope"></i> Enviar DM
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </section>
 
+            <!-- Commands Section -->
+            <section id="commands-section" class="content-section hidden">
+                <div class="header">
+                    <h2 class="page-title">Comandos</h2>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3 class="panel-title"><i class="fas fa-terminal"></i> Comandos Rápidos</h3>
+                    </div>
+                    <div class="command-grid" style="grid-template-columns: repeat(4, 1fr);">
+                        <button class="cmd-btn" onclick="showToast('/ban executado!')">
+                            <i class="fas fa-ban"></i>
+                            <span>/ban</span>
+                        </button>
+                        <button class="cmd-btn" onclick="showToast('/kick executado!')">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>/kick</span>
+                        </button>
+                        <button class="cmd-btn" onclick="showToast('/mute executado!')">
+                            <i class="fas fa-microphone-slash"></i>
+                            <span>/mute</span>
+                        </button>
+                        <button class="cmd-btn" onclick="showToast('/clear executado!')">
+                            <i class="fas fa-trash"></i>
+                            <span>/clear</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Logs Section -->
+            <section id="logs-section" class="content-section hidden">
+                <div class="header">
+                    <h2 class="page-title">Logs</h2>
+                    <button class="btn-neon" onclick="clearLogs()">
+                        <i class="fas fa-trash"></i> Limpar
+                    </button>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3 class="panel-title"><i class="fas fa-history"></i> Logs do Sistema</h3>
+                        <span style="color: var(--neon-green); font-size: 12px;">
+                            <i class="fas fa-circle" style="font-size: 8px;"></i> LIVE
+                        </span>
+                    </div>
+                    <div class="log-container" id="logs-container">
+                        <div class="log-entry">
+                            <span class="log-time">14:45:22</span>
+                            <span class="log-type" style="color: var(--neon-green);">[SYSTEM]</span>
+                            <span class="log-msg">Sistema iniciado</span>
+                        </div>
+                        <div class="log-entry">
+                            <span class="log-time">14:45:20</span>
+                            <span class="log-type" style="color: var(--neon-cyan);">[DISCORD]</span>
+                            <span class="log-msg">Conectado à API</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Mobile Menu Button -->
+    <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Toast -->
+    <div class="toast" id="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toast-message">Success</span>
+    </div>
+
+    <script>
+        function showSection(section) {
+            // Hide all sections
+            document.querySelectorAll('.content-section').forEach(s => {
+                s.classList.add('hidden');
+            });
+            
+            // Show selected
+            document.getElementById(section + '-section').classList.remove('hidden');
+            
+            // Update nav
+            document.querySelectorAll('.nav-link').forEach(l => {
+                l.classList.remove('active');
+            });
+            event.target.closest('.nav-link').classList.add('active');
+        }
+
+        function toggleMobileMenu() {
+            document.getElementById('sidebar').classList.toggle('mobile-open');
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        function sendMessage(e) {
+            e.preventDefault();
+            showToast('Mensagem enviada!');
+            e.target.reset();
+        }
+
+        function sendDM(e) {
+            e.preventDefault();
+            showToast('DM enviada!');
+            e.target.reset();
+        }
+
+        function clearLogs() {
+            document.getElementById('logs-container').innerHTML = '';
+            showToast('Logs limpos!');
+        }
+    </script>
 </body>
-</html>
+                        </html>
